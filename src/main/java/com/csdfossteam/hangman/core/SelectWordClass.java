@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javaapplication1;
+package com.csdfossteam.hangman.core;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public class SelectWordClass {
 
     private String st;
-    private File f;
+    public File f;
     private BufferedReader br;
     private int listLength;
     private Random rand;
@@ -31,9 +31,10 @@ public class SelectWordClass {
     private String line;
     private ArrayList<Character> a;
 
-    public SelectWordClass() throws FileNotFoundException {
+    public SelectWordClass() throws FileNotFoundException, IOException {
+        
         st = new String();
-        f = new File("/home/xrica_vabenee/NetBeansProjects/hangman_project/src/words.txt");
+        f = new File(Paths.get(new java.io.File( "." ).getCanonicalPath(), "src", "words.txt").toString());
         br = new BufferedReader(new FileReader(f));
         listLength = 0;
         rand = new Random();
@@ -51,7 +52,7 @@ public class SelectWordClass {
     public void pickRandomWord() throws IOException {
         select = rand.nextInt(listLength);
         // System.out.println(select);
-        Stream<String> lines = Files.lines(Paths.get("/home/xrica_vabenee/NetBeansProjects/hangman_project/src/words.txt"));
+        Stream<String> lines = Files.lines(Paths.get(new java.io.File( "." ).getCanonicalPath(), "src", "words.txt"));
         line = lines.skip(select).findFirst().get().toLowerCase();
        //System.out.println("The word which was selected is: "+line);
 
@@ -77,13 +78,14 @@ public class SelectWordClass {
             a.add(firstLetter);
            // System.out.print(firstLetter);
 
-            for (int i = 1; i < line.length() - 2; i++) {
+            for (int i = 1; i < line.length() - 1; i++) {
                 if (line.charAt(i) == firstLetter) {
                     a.add(firstLetter);
                 } else {
                     a.add('_');
                 }
             }
+            a.add(line.charAt(line.length()-1));
         } else {
             for (int i = 0; i < line.length() - 2; i++) {
                 a.add('_');

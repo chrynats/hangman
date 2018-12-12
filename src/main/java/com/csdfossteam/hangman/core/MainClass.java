@@ -3,11 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javaapplication1;
+package com.csdfossteam.hangman.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import static java.time.Clock.system;
+
 
 /**
  * print
@@ -21,8 +23,8 @@ public class MainClass {
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
         SelectWordClass a = new SelectWordClass();
+        
         MainGame m = new MainGame(a);
-        File f = new File("/home/xrica_vabenee/NetBeansProjects/hangman_project/src/words.txt");
         a.countWordList();
         a.pickRandomWord();
         System.out.println(a.getLine());
