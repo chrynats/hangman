@@ -26,6 +26,12 @@ public class Life {
     public int getCurrent() {
         return current;
     }
+    
+    public String getCurrentString()
+    
+    {
+        return String.valueOf(current);
+    }
 
     public void printLife() {
         System.out.println("Lives: " + current);
