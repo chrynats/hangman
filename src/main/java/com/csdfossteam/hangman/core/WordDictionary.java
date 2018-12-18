@@ -5,11 +5,7 @@
  */
 package com.csdfossteam.hangman.core;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,21 +29,18 @@ public class WordDictionary {
     private String current;
     private ArrayList<Character> currentHidden;
 
-    public WordDictionary(String dict_file) throws FileNotFoundException, IOException
+    public WordDictionary(Path dict_path) throws IOException
     {
-        
         st = new String();
-        file_path = Paths.get(new java.io.File( "." ).getCanonicalPath(), "src", dict_file);
+        file_path = dict_path;
         listLength = 0;
         rand = new Random();
         current = new String();
         currentHidden = new ArrayList<Character>();
-        
-        countWordList(); 
-        
-        
+
+        countWordList();
     }
-    
+
     private void countWordList() throws IOException 
     {
         f = new File(file_path.toString());
@@ -61,7 +54,7 @@ public class WordDictionary {
     
     public void changeFile(String dict_file) throws IOException
     {
-        file_path = Paths.get(new java.io.File( "." ).getCanonicalPath(), "src", dict_file);
+        file_path = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries",dict_file);
         
         countWordList();   
     }
@@ -72,7 +65,7 @@ public class WordDictionary {
     {
         select = rand.nextInt(listLength);
         // System.out.println(select);
-        Stream<String> lines = Files.lines(Paths.get(new java.io.File( "." ).getCanonicalPath(), "src", "words.txt"));
+        Stream<String> lines = Files.lines(file_path);
         current = lines.skip(select).findFirst().get().toLowerCase();
        //System.out.println("The word which was selected is: "+line);
 
@@ -90,13 +83,7 @@ public class WordDictionary {
     
     public String getCurrentHiddenString()
     {
-        StringBuilder sb = new StringBuilder();
-        for (Character s : currentHidden)
-        {
-            sb.append(s);
-            sb.append(" ");
-        }
-        return sb.toString();
+        return getArrayListToString(currentHidden);
     }
 
     public void createDashes(boolean helpfulVersion)
@@ -131,8 +118,18 @@ public class WordDictionary {
         }
     }
 
+
+
     
-    public String getArrayListToString(ArrayList<Character> inputArray)
+    public static void printArrayList(ArrayList<Character> inputArray)
+    {
+        for (int i = 0; i < inputArray.size(); i++)
+        {
+            System.out.print(inputArray.get(i) + " ");
+        }
+    }
+
+    public static String getArrayListToString(ArrayList<Character> inputArray)
     {
         StringBuilder sb = new StringBuilder();
         for (Character s : inputArray)
@@ -142,13 +139,23 @@ public class WordDictionary {
         }
         return sb.toString();
     }
-    
-        public void printArrayList(ArrayList<Character> inputArray) {
-        for (int i = 0; i < inputArray.size(); i++) {
-            System.out.print(inputArray.get(i) + " ");
-        }
+
+    public static File[] getDictionaries(String dirName)
+    {
+        File dir = new File(dirName);
+
+        return dir.listFiles (new FilenameFilter() {
+            public boolean accept(File dir, String filename)
+            { return filename.endsWith(".txt"); }
+        } );
     }
 
+
+    public static File[] getDictionaries() throws IOException
+    {
+        String dirName = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries").toString();
+        return getDictionaries(dirName);
+    }
 
  
 }
