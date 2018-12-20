@@ -32,7 +32,6 @@ public class GameEngine {
 
     public GameEngine()
     {
-        life = new Life(6);
         gameState = new Hashtable<String,Object>();
     }
 
@@ -48,6 +47,7 @@ public class GameEngine {
     {
         gameState.compute("play",(k,v) -> !(boolean) config.get("exit"));
         if (play()){
+        life = new Life(6);
         words = new WordDictionary((Path)config.get("dict_path"));
         words.pickRandomWord();
         words.createDashes(true);

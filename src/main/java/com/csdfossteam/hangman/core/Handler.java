@@ -51,8 +51,8 @@ public class Handler {
             /*---- SETTINGS PART ----*/
 
             //Start the Settings Window
-            //gameConfig = cli.config();
-            gameConfig = GameEngine.defaultConfig();
+            gameConfig = cli.config();
+            //gameConfig = GameEngine.defaultConfig();
 
             /*------ GAME PART ------*/
 

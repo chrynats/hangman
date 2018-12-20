@@ -108,6 +108,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     {
 
         Platform.setImplicitExit(false);
+        Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","AcidGR.otf").toString()).toExternalForm(), 60);
         Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","Aka-AcidGR-GhostStory.ttf").toString()).toExternalForm(), 60);
         gameStage = primaryStage;
         createGameStage();
@@ -356,7 +357,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     public void handleCloseRequest (WindowEvent event)
     {
         gameTerminated = true;
-        gameConfig.computeIfPresent("exit", (k, v) -> true);
+        //gameConfig.computeIfPresent("exit", (k, v) -> true);
         synchronized(HangMan.hangman) {HangMan.hangman.notify();}
         gameStage.hide();
 
