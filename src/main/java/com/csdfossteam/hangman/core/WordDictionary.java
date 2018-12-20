@@ -47,7 +47,6 @@ public class WordDictionary {
         br = new BufferedReader(new FileReader(f));
         
         while ((st = br.readLine()) != null) {
-            //System.out.println(st);
             listLength++;
         }
     }
@@ -64,10 +63,8 @@ public class WordDictionary {
     public void pickRandomWord() throws IOException
     {
         select = rand.nextInt(listLength);
-        // System.out.println(select);
         Stream<String> lines = Files.lines(file_path);
         current = lines.skip(select).findFirst().get().toLowerCase();
-       //System.out.println("The word which was selected is: "+line);
 
     }
 
@@ -92,7 +89,6 @@ public class WordDictionary {
         {
             char firstLetter = current.charAt(0);
             currentHidden.add(firstLetter);
-            // System.out.print(firstLetter);
 
             for (int i = 1; i < current.length() - 1; i++)
             {

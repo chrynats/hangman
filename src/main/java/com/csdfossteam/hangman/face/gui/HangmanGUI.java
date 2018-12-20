@@ -13,8 +13,6 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.csdfossteam.hangman.core.HangMan;
@@ -23,6 +21,7 @@ import com.csdfossteam.hangman.core.WordDictionary;
 import com.csdfossteam.hangman.core.inputString;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -33,9 +32,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -144,18 +141,16 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         Platform.runLater(() -> {
 
 
-        if (activePlayer==0)
-        {
-            playerBoxList[activePlayer].setStyle(inactivePlayerStyle());
-            activePlayer=1;
-            playerBoxList[activePlayer].setStyle(activePlayerStyle());
-        }
-        else if (activePlayer==1)
-        {
-            playerBoxList[activePlayer].setStyle(inactivePlayerStyle());
-            activePlayer=0;
-            playerBoxList[activePlayer].setStyle(activePlayerStyle());
-        }
+        playerBoxList[activePlayer].getStyleClass().add("player-vbox-inactive-ii");
+        for (Node boxlabel : playerBoxList[activePlayer].getChildren())
+            ((Label) boxlabel).getStyleClass().add("player-label-inactive");
+
+        activePlayer=(activePlayer+1)%2;
+        playerBoxList[activePlayer].getStyleClass().remove("player-vbox-inactive-ii");
+        for (Node boxlabel : playerBoxList[activePlayer].getChildren())
+            ((Label) boxlabel).getStyleClass().remove("player-label-inactive");
+            //((Label) boxlabel).getStyleClass().add("player-label-active");
+
 
         text.setText(
         ((WordDictionary)gameStatus.get("hiddenWord")).getCurrentHiddenString());
@@ -222,9 +217,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         //--- SETTING UP INPUT PANEL ---
 
         input = new TextField();
-        input.setStyle("-fx-background-color: white;");
+        input.getStyleClass().add("input-textfield");
         input.setOnKeyPressed(e -> handleInput(e));
-        //input.setStyle("-fx-background-color: transparent;");
 
         BorderPane layoutBottom = new BorderPane();
 
@@ -237,13 +231,9 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         hangman_img.setCache(true);
         hangman_img.setFitWidth(200);
         hangman_img.setPreserveRatio(true);
+
         text = new Label();
-        text.setStyle("-fx-background-color: transparent;"+
-                      "-fx-font-size: 90;"+
-                      "-fx-font-family: Aka-AcidGR-GhostStory;");
-        //text.setFont(Font.font("Aka-AcidGR-RomanScript",60));
-        text.setTextFill(Color.WHITESMOKE);
-        text.setTextAlignment(TextAlignment.CENTER);
+        text.getStyleClass().add("hiddenword-label");
 
         BorderPane layoutCenter = new BorderPane();
 
@@ -255,9 +245,9 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         playerBoxList = new VBox[2];
         playerBoxList[0] = makePlayer();
         playerBoxList[1] = makePlayer();
-        HBox players = new HBox(playerBoxList[0],playerBoxList[1]);
-        players.setSpacing(0);
-        players.setAlignment(Pos.CENTER);
+
+        HBox playersBox = new HBox(playerBoxList[0],playerBoxList[1]);
+        playersBox.getStyleClass().add("playersbox-hbox");
 
         activePlayer = 1;
 
@@ -267,16 +257,17 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         layout.setCenter(layoutCenter);
         layout.setBottom(layoutBottom);
-        layout.setTop(players);
+        layout.setTop(playersBox);
 
         layout.setBackground(new Background(
                              new BackgroundImage(
-                             new Image ("file:///"+Paths.get(dirPathToData,"images","background.png").toString()),
+                             new Image ("file:///"+Paths.get(dirPathToData,"images","background1-1.png").toString()),
                      null,null,null,null)));
 
         //--- SETTING UP SCENE ---
 
-        Scene scene = new Scene(layout,800,400);
+        Scene scene = new Scene(layout,800,320);
+        scene.getStylesheets().add("/com/csdfossteam/hangman/face/gui/HangmanStylez.css");
 
 
         //--- SETTING UP STAGE ---
@@ -328,17 +319,12 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     private VBox makePlayer()
     {
         Label label1 = new Label("player-1");
-        Label label2 = new Label("Letters User: a, d, x, b, q, p, p, q, x, q, q, q , q ,q ,q ,q,q");
-        label1.setFont(Font.font("Century Gothic",12));
-        label2.setFont(Font.font("Century Gothic",12));
-        label1.setTextFill(Color.BLACK);
-        label2.setTextFill(Color.BLACK);
-        label1.setTextAlignment(TextAlignment.CENTER);
-        label2.setTextAlignment(TextAlignment.CENTER);
-        VBox player = new VBox(label1,label2);
-        player.setSpacing(2);
+        Label label2 = new Label("Letters User: a, d, x, b, q, p, p, q, x");
+        label1.getStyleClass().add("player-label-active");
+        label2.getStyleClass().add("player-label-active");
 
-        player.setStyle(inactivePlayerStyle());
+        VBox player = new VBox(label1,label2);
+        player.getStyleClass().add("player-vbox-active-ii");
 
         return player;
     }
@@ -370,7 +356,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     public void handleCloseRequest (WindowEvent event)
     {
         gameTerminated = true;
-        //gameConfig.computeIfPresent("exit", (k, v) -> true);
+        gameConfig.computeIfPresent("exit", (k, v) -> true);
         synchronized(HangMan.hangman) {HangMan.hangman.notify();}
         gameStage.hide();
 
@@ -386,32 +372,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
       ---  STATIC PART OF THE CLASS ---
     ------------------------------------*/
 
-    /**
-     * Returns the default cssLayout for the active player VBox
-     * @return cssLayout
-     */
-    public static String activePlayerStyle()
-    {
-        String cssLayout = "-fx-padding: 5;"
-                + "-fx-border-width: 3;" + "-fx-border-insets: 2;"  + "-fx-border-style: solid inside;"
-                + "-fx-border-radius: 2;" + "-fx-border-color: rgba(0,128,0,1);"
-                + "-fx-background-color: rgba(190,235,190,0.4);" + "-fx-background-insets: 2;";
 
-        return cssLayout;
-    }
 
-    /**
-     * Returns the default cssLayout for the inactive players VBoxes
-     * @return cssLayout
-     */
-    public static String inactivePlayerStyle()
-    {
-        String cssLayout = "-fx-padding: 5;" + "-fx-border-style: solid inside;"
-                + "-fx-border-width: 1;" + "-fx-border-insets: 2;"
-                + "-fx-border-radius: 1;" + "-fx-border-color: whitesmoke;"
-                + "-fx-background-color: rgba(255,240,240,0.4);" + "-fx-background-insets: 2;";
-
-        return cssLayout;
-    }
 
 }
