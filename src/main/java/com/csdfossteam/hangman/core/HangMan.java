@@ -5,9 +5,8 @@
  */
 package com.csdfossteam.hangman.core;
 
-
+import java.io.FileNotFoundException;
 import java.io.IOException;
-
 
 /**
  *
@@ -16,13 +15,10 @@ import java.io.IOException;
 public class HangMan 
 {
 
-    public static Object hangman;
-
-    public static void main(String[] args) throws IOException, InterruptedException
+    public static void main(String[] args) throws FileNotFoundException, IOException
     {
-
-        hangman = new Handler();
+        Handler hangman = new Handler();
         
-        ((Handler) hangman).start();
+        hangman.start();
     }
 }

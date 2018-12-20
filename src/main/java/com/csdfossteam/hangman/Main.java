@@ -20,9 +20,8 @@ public final class Main {
         Path path;
         
         path = Paths.get(new java.io.File( "." ).getCanonicalPath(),"src","main","resources","com","csdfossteam","hangman","face","cli","classic");
-        
+       
         new HangmanScreen(ViewsFile.fromPath(path)).start();
-
     }
 
 }

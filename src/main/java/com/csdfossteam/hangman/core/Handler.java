@@ -5,12 +5,10 @@
  */
 package com.csdfossteam.hangman.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Hashtable;
-
-import com.csdfossteam.hangman.face.cli.DemoCLI;
-import com.csdfossteam.hangman.face.gui.HangmanGUI;
-import javafx.application.Application;
+import static java.time.Clock.system;
 
 
 /**
@@ -25,74 +23,50 @@ public class Handler {
      * @throws java.io.FileNotFoundException
      */
     
-    private DemoCLI cli;
-    private HangmanGUI gui;
-    private Thread gameWindowThread;
-    private Thread gameEngineThread;
-    private inputString inputBuffer;
-    private Hashtable<String,Object> gameConfig;
-    private Hashtable<String,Object> gameState;
-    private GameEngine game;
-
+       
     public Handler ()
     {
-        gameEngineThread = Thread.currentThread();
-        inputBuffer = new inputString();
-        game = new GameEngine();
-        cli = new DemoCLI();
-        gui = startGUI();
+        
     }
-
-    public void start() throws IOException, InterruptedException {
-
-
-        do {
-
-            //---- SETTINGS PART ----
-
-            //Start the Settings Window
-            gameConfig = cli.config();
-            //gameConfig = GameEngine.defaultConfig();
-
-            //------ GAME PART ------
-
-            //Initialize game parameters that are outside the constructor?
-            gameState = game.init(gameConfig);
-
-
-            //Start Game Window GUI
-            if (game.play()) {
-                gui.init(gameConfig, gameState);} //cli.init(gameConfig,gameState);
-
-                while (game.play()) {
-
-
-                    //Get input from Interface
-                    gui.input(inputBuffer); //cli.input(inputBuffer);
-
-                    //Transfer user input to game engine
-                    game.inputLetter(inputBuffer.get());
-
-                    //Update User Interface
-                    gui.update(gameState); //cli.update(game.gameState());
-
-                }
-
-            }
-            while (!(boolean) gameConfig.get("exit")) ;
-
-            gui.terminate();
-
-        }
-
-    private HangmanGUI startGUI()
+    public void start() throws FileNotFoundException, IOException
     {
-        gameWindowThread = new Thread(() -> Application.launch(HangmanGUI.class));
-        gameWindowThread.start();
+        
+        
+        //---- Start Up Interface ----
+        
+        DemoCLI itrface = new DemoCLI();
+        
+        /* Initialize and Launch the interface here */
+        
+        //---- Settings Part ----
+        Boolean notExit = true;    
+        
+        do {
+            
+            //Select Word Pool
 
-        HangmanGUI gui = HangmanGUI.getGUIinstance();
+                  
+            //Create A Game with Desired Settings
+            
+            String dict_file = "words.txt";
+            GameMachanics game = new GameMachanics(dict_file);
 
-        return gui;
+            //Iniitalize game parameters that are outside the constructor?
+            game.init();
+
+            while (game.play())
+            {               
+                //Display Game State
+                itrface.display(game.gameState());
+                
+                //Get input from Interface
+                String c = itrface.input(); 
+                game.inputLetter(c);               
+            }
+            
+            notExit = false;
+        
+        } while (notExit);
     }
 
 }
