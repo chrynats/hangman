@@ -48,13 +48,13 @@ public class Handler {
 
         do {
 
-            /*---- SETTINGS PART ----*/
+            //---- SETTINGS PART ----
 
             //Start the Settings Window
-            //gameConfig = cli.config();
-            gameConfig = GameEngine.defaultConfig();
+            gameConfig = cli.config();
+            //gameConfig = GameEngine.defaultConfig();
 
-            /*------ GAME PART ------*/
+            //------ GAME PART ------
 
             //Initialize game parameters that are outside the constructor?
             gameState = game.init(gameConfig);
@@ -89,6 +89,7 @@ public class Handler {
     {
         gameWindowThread = new Thread(() -> Application.launch(HangmanGUI.class));
         gameWindowThread.start();
+
         HangmanGUI gui = HangmanGUI.getGUIinstance();
 
         return gui;
