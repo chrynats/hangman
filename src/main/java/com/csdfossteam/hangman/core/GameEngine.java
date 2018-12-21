@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 /**
+ * Game Engine Class
+ * Handles the words, lifes and letters of the player(s)
  *
  * @author xrica_vabenee, nasioutz
  */
@@ -108,7 +110,7 @@ public class GameEngine {
 
     } catch (NullPointerException e) {updateGameStatus();}}
     /**
-     *
+     * Check whether the Game should continue
      */
     public boolean play()
     {
@@ -116,7 +118,7 @@ public class GameEngine {
     }
 
     /**
-     *
+     *  Forcefully Terminate the Game Status
      */
     public void terminatePlay()
     {
@@ -130,11 +132,6 @@ public class GameEngine {
     public void updateGameStatus()
     {
         gameState.computeIfPresent("play",(k,v) -> !checkWord() && !(boolean) gameConfig.get("exit"));
-    }
-
-    public void toggleTest()
-    {
-        gameState.computeIfPresent("test-bool", (k,v) -> !((boolean)gameState.get("test-bool")));
     }
 
     /**

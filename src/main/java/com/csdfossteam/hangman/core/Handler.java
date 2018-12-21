@@ -16,7 +16,7 @@ import javafx.application.Application;
 /**
  * print
  *
- * @author xrica_vabenee
+ * @author xrica_vabenee, nasioutz
  */
 public class Handler {
 
@@ -34,6 +34,9 @@ public class Handler {
     private Hashtable<String,Object> gameState;
     private GameEngine game;
 
+    /**
+     * Game Handler Constructor
+     */
     public Handler ()
     {
         gameEngineThread = Thread.currentThread();
@@ -43,6 +46,11 @@ public class Handler {
         gui = startGUI();
     }
 
+    /**
+     * Main Method that Initiates Play
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void start() throws IOException, InterruptedException {
 
 
@@ -76,6 +84,7 @@ public class Handler {
                     //Update User Interface
                     gui.update(gameState); //cli.update(game.gameState());
 
+
                 }
 
             }
@@ -85,6 +94,10 @@ public class Handler {
 
         }
 
+    /**
+     * Launch the JavaFX Application and Return the Current GUI Object
+      * @return HangmanGUI
+     */
     private HangmanGUI startGUI()
     {
         gameWindowThread = new Thread(() -> Application.launch(HangmanGUI.class));

@@ -1,16 +1,36 @@
+.root
+{
+    -fx-border-color: rgba(64,64,64,1.0);
+    -fx-border-width: 0 0 0 0;
+    -fx-border-insets: 0 0 0 0;
+}
+.exit-button
+{
+    -fx-background-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-background-insets: 0,0,0,0;
+    -fx-background-radius: 0px, 0px, 0px, 0px;
+    -fx-border-color: transparent;
+    -fx-padding: 11 11 11 11;
+    -fx-border-width: 0 0 0 0;
+    -fx-alignment: center;
+}
+.exit-button:hover{
+    -fx-background-color: rgba(35,35,35,1.0);
+    -fx-border-color: rgba(35,35,35,1.0);
+}
 .player-label-active
 {
     -fx-text-alignment: center;
     -fx-font-family: 'Century Gothic';
     -fx-text-fill: rgba(247,247,247,1.0);
     -fx-font-size: 12;
-
 }
 .player-label-inactive
 {
     -fx-text-fill: rgba(57,125,119,1.0);
 }
-.player-vbox-active-ii
+.player-vbox-active
 {
     -fx-alignment: center;
     -fx-padding: 5;
@@ -23,7 +43,7 @@
     -fx-background-insets: 0;
     -fx-background-radius: 2;
 }
-.player-vbox-inactive-ii
+.player-vbox-inactive
 {
     -fx-background-color: rgba(82,179,171,1.0);
 }
@@ -41,19 +61,17 @@
 .hiddenword-label
 {
     -fx-background-color: transparent;
-    -fx-font-size: 90;
-    -fx-font-family: Aka-AcidGR-GhostStory;
+    -fx-font-size: 70;
+    -fx-font-family: Aka-AcidGR-Serif;
     -fx-text-fill: whitesmoke;
-    -fx-text-alignment: LEFT;
+    -fx-text-alignment: left;
 }
 .playersbox-hbox
 {
-    -fx-alignment: CENTER;
+    -fx-alignment: center;
     -fx-background-color: rgba(64,64,64,1.0);
     -fx-border-color: rgba(55,55,55,1.0);
     -fx-border-width: 0 0 0 0;
     -fx-border-radius: 0,2,0,2;
     -fx-spacing: 5;
-
-
 }

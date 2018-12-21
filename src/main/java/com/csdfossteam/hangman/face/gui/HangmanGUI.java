@@ -20,6 +20,7 @@ import com.csdfossteam.hangman.core.Life;
 import com.csdfossteam.hangman.core.WordDictionary;
 import com.csdfossteam.hangman.core.inputString;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -31,9 +32,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
 /**
@@ -102,14 +105,17 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     private VBox[] playerBoxList;
     private int activePlayer;
     private boolean gameTerminated;
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     @Override
     public void start(Stage primaryStage) throws Exception
     {
 
         Platform.setImplicitExit(false);
-        Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","AcidGR.otf").toString()).toExternalForm(), 60);
-        Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","Aka-AcidGR-GhostStory.ttf").toString()).toExternalForm(), 60);
+
+        Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","AC-Serif.ttf").toString()).toExternalForm(), 60);
+
         gameStage = primaryStage;
         createGameStage();
     }
@@ -124,7 +130,6 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         gameState = state;
         gameTerminated = false;
         update(state);
-//        text.setText(((WordDictionary) state.get("hiddenWord")).getCurrentHiddenString());
         Platform.runLater(() -> gameStage.show());
     }
 
@@ -142,12 +147,12 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         Platform.runLater(() -> {
 
 
-        playerBoxList[activePlayer].getStyleClass().add("player-vbox-inactive-ii");
+        playerBoxList[activePlayer].getStyleClass().add("player-vbox-inactive");
         for (Node boxlabel : playerBoxList[activePlayer].getChildren())
             ((Label) boxlabel).getStyleClass().add("player-label-inactive");
 
         activePlayer=(activePlayer+1)%2;
-        playerBoxList[activePlayer].getStyleClass().remove("player-vbox-inactive-ii");
+        playerBoxList[activePlayer].getStyleClass().remove("player-vbox-inactive");
         for (Node boxlabel : playerBoxList[activePlayer].getChildren())
             ((Label) boxlabel).getStyleClass().remove("player-label-inactive");
             //((Label) boxlabel).getStyleClass().add("player-label-active");
@@ -156,16 +161,19 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         text.setText(
         ((WordDictionary)gameStatus.get("hiddenWord")).getCurrentHiddenString());
 
+
+
         hangman_img.setImage(
         getHangmanImages(((Life) gameStatus.get("lifes")).getCurrent()));
 
         input.requestFocus();
-
-        if (!(boolean)gameStatus.get("play")) {endGame();}
-
+        gameStage.toFront();
 
     });
+
+        if (!(boolean)gameStatus.get("play")) {endGame();}
         if (gameTerminated) gameState.computeIfPresent("play",(k,v)->false);
+
     }
 
     /**
@@ -185,13 +193,14 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Fire an Event to emulate an internal "window closure" event
      * @param
      */
-    public void endGame() {Platform.runLater(() ->{try{
+    public void endGame() {try{
 
-            TimeUnit.SECONDS.sleep(2);
-            gameStage.fireEvent
-                (new WindowEvent(gameStage, WindowEvent.WINDOW_CLOSE_REQUEST));
+        TimeUnit.MILLISECONDS.sleep(750);
 
-        }catch (InterruptedException e) {e.printStackTrace();}});}
+        Platform.runLater(() ->
+                gameStage.fireEvent (new WindowEvent(gameStage, WindowEvent.WINDOW_CLOSE_REQUEST)));
+
+    }catch (InterruptedException e) {e.printStackTrace();}}
 
 
     /**
@@ -213,8 +222,6 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      */
     private void createGameStage() throws IOException {
 
-        gameStage.setTitle("Handman: Game");
-
         //--- SETTING UP INPUT PANEL ---
 
         input = new TextField();
@@ -230,16 +237,21 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         hangman_img  = new ImageView();
         hangman_img.setImage(getHangmanImages(-1));
         hangman_img.setCache(true);
-        hangman_img.setFitWidth(200);
+        hangman_img.setFitHeight(330);
         hangman_img.setPreserveRatio(true);
 
         text = new Label();
         text.getStyleClass().add("hiddenword-label");
 
+        BorderPane.setAlignment(text,Pos.BOTTOM_LEFT);
+        BorderPane.setMargin(text,new Insets(0,0,20,50));
+
         BorderPane layoutCenter = new BorderPane();
 
         layoutCenter.setRight(hangman_img);
         layoutCenter.setCenter(text);
+
+        BorderPane.setAlignment(layoutCenter, Pos.BOTTOM_CENTER);
 
         //--- SETTING UP PLAYERS PANEL---
 
@@ -247,7 +259,18 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         playerBoxList[0] = makePlayer();
         playerBoxList[1] = makePlayer();
 
-        HBox playersBox = new HBox(playerBoxList[0],playerBoxList[1]);
+        Region placeholderRegion = new Region();
+        Region playerRegion = new Region();
+        HBox.setHgrow(placeholderRegion, Priority.ALWAYS);
+        HBox.setHgrow(playerRegion, Priority.ALWAYS);
+
+        Button exitButton = new Button();
+        exitButton.setGraphic(new ImageView(
+                              new Image ("file:///"+Paths.get(dirPathToData,"images","close-white.png").toString(),20,20,true,true)));
+
+        exitButton.getStyleClass().add("exit-button");
+        exitButton.setOnAction(e -> endGame());
+        HBox playersBox = new HBox(placeholderRegion,playerBoxList[0],playerBoxList[1],playerRegion,exitButton);
         playersBox.getStyleClass().add("playersbox-hbox");
 
         activePlayer = 1;
@@ -259,22 +282,24 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         layout.setCenter(layoutCenter);
         layout.setBottom(layoutBottom);
         layout.setTop(playersBox);
-
         layout.setBackground(new Background(
                              new BackgroundImage(
-                             new Image ("file:///"+Paths.get(dirPathToData,"images","background1-1.png").toString()),
+                             new Image ("file:///"+Paths.get(dirPathToData,"images","background.png").toString()),
                      null,null,null,null)));
 
         //--- SETTING UP SCENE ---
 
-        Scene scene = new Scene(layout,800,320);
+        Scene scene = new Scene(layout,800,400);
         scene.getStylesheets().add("/com/csdfossteam/hangman/face/gui/HangmanStylez.css");
-
+        scene.setOnMousePressed(e-> getOffset(e));
+        scene.setOnMouseDragged(e-> moveWindow(e));
 
         //--- SETTING UP STAGE ---
         gameStage = new Stage();
         gameStage.setScene(scene);
         gameStage.setOnCloseRequest(e -> handleCloseRequest(e));
+        gameStage.initStyle(StageStyle.TRANSPARENT);
+        gameStage.setTitle("Handman: Game");
 
     }
 
@@ -325,7 +350,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         label2.getStyleClass().add("player-label-active");
 
         VBox player = new VBox(label1,label2);
-        player.getStyleClass().add("player-vbox-active-ii");
+        player.getStyleClass().add("player-vbox-active");
 
         return player;
     }
@@ -359,10 +384,29 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         gameTerminated = true;
         //gameConfig.computeIfPresent("exit", (k, v) -> true);
         synchronized(HangMan.hangman) {HangMan.hangman.notify();}
-        gameStage.hide();
+        Platform.runLater(()->gameStage.hide());
 
     }
 
+    /**
+     * Moves the Window Around
+     * @param event
+     */
+    public void moveWindow(MouseEvent event)
+    {
+        gameStage.setX(event.getScreenX() - xOffset);
+        gameStage.setY(event.getScreenY() - yOffset);
+    }
+
+    /**
+     * Get the Current Window Position
+     * @param event
+     */
+    public void getOffset(MouseEvent event)
+    {
+        xOffset = event.getSceneX();
+        yOffset = event.getSceneY();
+    }
     @Override
     public void handle(ActionEvent event)
     {

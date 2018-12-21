@@ -136,13 +136,13 @@ public class WordDictionary {
         return sb.toString();
     }
 
-    public static File[] getDictionaries(String dirName)
+    public static File[] getFiles(String dirName,String file_type)
     {
         File dir = new File(dirName);
 
         return dir.listFiles (new FilenameFilter() {
             public boolean accept(File dir, String filename)
-            { return filename.endsWith(".txt"); }
+            { return filename.endsWith(file_type); }
         } );
     }
 
@@ -150,7 +150,7 @@ public class WordDictionary {
     public static File[] getDictionaries() throws IOException
     {
         String dirName = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries").toString();
-        return getDictionaries(dirName);
+        return getFiles(dirName,".txt");
     }
 
  

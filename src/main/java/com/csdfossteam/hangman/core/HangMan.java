@@ -6,23 +6,26 @@
 package com.csdfossteam.hangman.core;
 
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 
 /**
- *
- * @author Aradon
+ * HangMan main Class
+ * @author nasioutz
  */
-public class HangMan 
+public class HangMan
 {
 
     public static Object hangman;
 
     public static void main(String[] args) throws IOException, InterruptedException
     {
-
         hangman = new Handler();
         
         ((Handler) hangman).start();
     }
 }
+
