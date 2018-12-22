@@ -58,8 +58,6 @@ public class WordDictionary {
         countWordList();   
     }
 
-    
-
     public void pickRandomWord() throws IOException
     {
         select = rand.nextInt(listLength);
@@ -114,9 +112,6 @@ public class WordDictionary {
         }
     }
 
-
-
-    
     public static void printArrayList(ArrayList<Character> inputArray)
     {
         for (int i = 0; i < inputArray.size(); i++)

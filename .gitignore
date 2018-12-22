@@ -27,3 +27,4 @@ target/
 hs_err_pid*
 data/dictionaries/words.txt
 data/fonts/TRON.TTF
+out/production/main/META-INF/main.kotlin_module

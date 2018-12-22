@@ -5,21 +5,20 @@
  */
 package com.csdfossteam.hangman.face.gui;
 
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Hashtable;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.csdfossteam.hangman.core.HangMan;
-import com.csdfossteam.hangman.core.Life;
-import com.csdfossteam.hangman.core.WordDictionary;
-import com.csdfossteam.hangman.core.inputString;
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -39,14 +38,16 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
+import com.csdfossteam.hangman.core.*;
+
 /**
- * <h1>Implements a Hangman GUI Class</h1>
+ * <h1>Implements a Hangman GUI Class.</h1>
  *  *
  * <p>
- * <b>Note:</b> Incomplete
+ * <b>Note:</b> Multiplayer part is missing.
  *
  * @author  nasioutz
- * @version 0.5
+ * @version 0.8
  * @since   2018-17-12
  */
 public class HangmanGUI extends Application implements EventHandler<ActionEvent>
@@ -91,22 +92,23 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     --- NON STATIC PART OF THE CLASS ---
     ------------------------------------*/
 
-    public TextField input;
-    public Label text;
-    public ImageView hangman_img;
-
-    public Stage gameStage; //Public to be accessible from outside it's thread
+    private TextField input;
+    private Label text;
+    private ImageView hangman_img;
+    private Stage gameStage; //Public to be accessible from outside it's thread
+    private Alert exitGameAlert;
+    private VBox[] playerBoxList;
 
     private String dirPath = new java.io.File( "." ).getCanonicalPath();
     private String dirPathToData = Paths.get(dirPath,"data").toString();
     private inputString handlersInput = new inputString("");
-    private Hashtable<String,Object> gameConfig;
-    private Hashtable<String, Object> gameState;
-    private VBox[] playerBoxList;
+    private Hashtable<String,Object> gameConfig,gameState;
     private int activePlayer;
     private boolean gameTerminated;
-    private double xOffset = 0;
-    private double yOffset = 0;
+    private double xOffset = 0, yOffset = 0;
+
+    private IntegerProperty scene_width = new SimpleIntegerProperty(this,"scene_width",850);
+    private IntegerProperty scene_height = new SimpleIntegerProperty(this,"scene_height",400);
 
     @Override
     public void start(Stage primaryStage) throws Exception
@@ -114,23 +116,44 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         Platform.setImplicitExit(false);
 
-        Font.loadFont(new URL("file:///"+Paths.get(dirPathToData,"fonts","AC-Serif.ttf").toString()).toExternalForm(), 60);
+        Font.loadFont(
+        new URL("file:///"+Paths.get(dirPathToData,"fonts","AC-DiaryGirl_Unicode.ttf").toString()).toExternalForm(), 60);
 
         gameStage = primaryStage;
-        createGameStage();
+
     }
 
 
     /**
-     * Pass game configuration parameters and open the window
+     * Pass game configuration parameters and open the window.
      * @param config
+     * @param state
      */
-    public void init(Hashtable<String,Object> config,Hashtable<String,Object> state) throws IOException {
+    public void init(Hashtable<String,Object> config,Hashtable<String,Object> state) throws IOException
+    {
+        Platform.runLater(() -> createGameStage());
         gameConfig = config;
         gameState = state;
         gameTerminated = false;
         update(state);
-        Platform.runLater(() -> gameStage.show());
+        Platform.runLater(() ->
+            gameStage.show());
+
+    }
+
+    /**
+     * Pass game configuration parameters along with winodw size and open the window
+     * @param config
+     * @param state
+     * @param width
+     * @param height
+     * @throws IOException
+     */
+    public void init(Hashtable<String,Object> config,Hashtable<String,Object> state,int width,int height) throws IOException
+    {
+        init(config,state);
+        scene_width.set(width);
+        scene_height.set(height);
     }
 
 
@@ -142,7 +165,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      *
      * @param gameStatus
      */
-    public void update(Hashtable<String, Object> gameStatus) throws IOException
+    public void update(Hashtable<String, Object> gameStatus)
     {
         Platform.runLater(() -> {
 
@@ -152,15 +175,14 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
             ((Label) boxlabel).getStyleClass().add("player-label-inactive");
 
         activePlayer=(activePlayer+1)%2;
+
         playerBoxList[activePlayer].getStyleClass().remove("player-vbox-inactive");
         for (Node boxlabel : playerBoxList[activePlayer].getChildren())
             ((Label) boxlabel).getStyleClass().remove("player-label-inactive");
-            //((Label) boxlabel).getStyleClass().add("player-label-active");
 
 
         text.setText(
         ((WordDictionary)gameStatus.get("hiddenWord")).getCurrentHiddenString());
-
 
 
         hangman_img.setImage(
@@ -170,14 +192,12 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         gameStage.toFront();
 
     });
-
         if (!(boolean)gameStatus.get("play")) {endGame();}
         if (gameTerminated) gameState.computeIfPresent("play",(k,v)->false);
-
     }
 
     /**
-     * Pauses the main Thread to wait for user input through handling KeyEvent
+     * Pauses the main Thread to wait for user input through handling KeyEvent.
      * @param input
      * @throws InterruptedException
      */
@@ -190,7 +210,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
 
     /**
-     * Fire an Event to emulate an internal "window closure" event
+     * Fire an Event to emulate an internal "window closure" event.
      * @param
      */
     public void endGame() {try{
@@ -202,11 +222,21 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
     }catch (InterruptedException e) {e.printStackTrace();}}
 
+    public void closeGame()
+    {
+        Optional<ButtonType> result = exitGameAlert.showAndWait();
+        if (((Optional) result).get()==ButtonType.OK)
+        {
+            gameConfig.computeIfPresent("exit", (k, v) -> true);
+            endGame();
+        }
+    }
+
 
     /**
-     * Completely Terminate the javaFX platform and thus it's thread
+     * Completely Terminate the javaFX platform and thus it's thread.
      * <p>
-     * <b>Note:</b> It's necessary since Platform.setImplicitExit() is set to FALSE
+     * <b>Note:</b> It's necessary since Platform.setImplicitExit() is set to FALSE.
      */
     public void terminate()
     {
@@ -218,9 +248,23 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     ------------------------------------*/
 
     /**
-     * Setup the Stage/Layout for the main game window
+     * Setup the Stage/Layout for the main game window.
      */
-    private void createGameStage() throws IOException {
+    private void createGameStage() {
+
+        //--- SETTINGS UP DIALOG PANES ---
+
+        exitGameAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        exitGameAlert.setTitle("End Game and Exit");
+        exitGameAlert.setHeaderText("End Game and Exit Application");
+        exitGameAlert.setContentText("Are you sure?");
+        exitGameAlert.initStyle(StageStyle.UNDECORATED);
+
+        DialogPane exitPane = exitGameAlert.getDialogPane();
+        exitPane.getStylesheets().add(getClass().getResource("HangmanStylez.css").toExternalForm());
+        exitPane.getStyleClass().add("exit-pane");
+        exitPane.setGraphic(new ImageView(
+                            findImage("close-white.png",20,20,true,true)));
 
         //--- SETTING UP INPUT PANEL ---
 
@@ -237,12 +281,11 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         hangman_img  = new ImageView();
         hangman_img.setImage(getHangmanImages(-1));
         hangman_img.setCache(true);
-        hangman_img.setFitHeight(330);
+        hangman_img.fitHeightProperty().bind((scene_height.multiply(0.825)));
         hangman_img.setPreserveRatio(true);
 
         text = new Label();
         text.getStyleClass().add("hiddenword-label");
-
         BorderPane.setAlignment(text,Pos.BOTTOM_LEFT);
         BorderPane.setMargin(text,new Insets(0,0,20,50));
 
@@ -259,18 +302,24 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         playerBoxList[0] = makePlayer();
         playerBoxList[1] = makePlayer();
 
-        Region placeholderRegion = new Region();
+        Region backRegion = new Region();
         Region playerRegion = new Region();
-        HBox.setHgrow(placeholderRegion, Priority.ALWAYS);
+        HBox.setHgrow(backRegion, Priority.ALWAYS);
         HBox.setHgrow(playerRegion, Priority.ALWAYS);
 
         Button exitButton = new Button();
         exitButton.setGraphic(new ImageView(
-                              new Image ("file:///"+Paths.get(dirPathToData,"images","close-white.png").toString(),20,20,true,true)));
-
+                              findImage("close-white.png",20,20,true,true)));
         exitButton.getStyleClass().add("exit-button");
-        exitButton.setOnAction(e -> endGame());
-        HBox playersBox = new HBox(placeholderRegion,playerBoxList[0],playerBoxList[1],playerRegion,exitButton);
+        exitButton.setOnAction(e -> closeGame());
+
+        Button backButton = new Button();
+        backButton.setGraphic(new ImageView(
+                              findImage("back-white.png",20,20,true,true)));
+        backButton.getStyleClass().add("exit-button");
+        backButton.setOnAction(e -> endGame());
+
+        HBox playersBox = new HBox(backButton,backRegion,playerBoxList[0],playerBoxList[1],playerRegion,exitButton);
         playersBox.getStyleClass().add("playersbox-hbox");
 
         activePlayer = 1;
@@ -283,13 +332,14 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         layout.setBottom(layoutBottom);
         layout.setTop(playersBox);
         layout.setBackground(new Background(
-                             new BackgroundImage(
-                             new Image ("file:///"+Paths.get(dirPathToData,"images","background.png").toString()),
-                     null,null,null,null)));
+                    new BackgroundImage(
+                             findImage("background.png"),null,null,null,null)));
 
         //--- SETTING UP SCENE ---
 
-        Scene scene = new Scene(layout,800,400);
+        Scene scene = new Scene(layout,scene_width.get(),scene_height.get());
+        scene_width.bind(scene.widthProperty());
+        scene_height.bind(scene.heightProperty());
         scene.getStylesheets().add("/com/csdfossteam/hangman/face/gui/HangmanStylez.css");
         scene.setOnMousePressed(e-> getOffset(e));
         scene.setOnMouseDragged(e-> moveWindow(e));
@@ -297,14 +347,17 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         //--- SETTING UP STAGE ---
         gameStage = new Stage();
         gameStage.setScene(scene);
+        gameStage.widthProperty().addListener((e) -> resizeText(e));
         gameStage.setOnCloseRequest(e -> handleCloseRequest(e));
         gameStage.initStyle(StageStyle.TRANSPARENT);
         gameStage.setTitle("Handman: Game");
+        gameStage.getIcons().add(
+        findImage("hangman-icon.png"));
 
     }
 
     /**
-     * Get the image corresponding to "idx" amount of lifes from data folder
+     * Get the image corresponding to "idx" amount of lifes from data folder.
      * @param idx
      * @return Image
      */
@@ -315,7 +368,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     }
 
     /**
-     * Get the list of images corresponding the amount of lifes from data folder
+     * Get the list of images corresponding the amount of lifes from data folder.
      * @return Image[]
      */
     private Image[] getHangmanImages()
@@ -355,6 +408,30 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return player;
     }
 
+    /**
+     * Get an image from the designated data folder.
+     * @param imageName
+     * @return
+     */
+    private Image findImage(String imageName)
+    {
+        return new Image ("file:///"+Paths.get(dirPathToData,"images",imageName).toString());
+    }
+
+    /**
+     * Get an image from the designated data folder with the specified parameters.
+     * @param imageName
+     * @param w
+     * @param h
+     * @param preserveRatio
+     * @param smooth
+     * @return
+     */
+    private Image findImage(String imageName, int w, int h, boolean preserveRatio, boolean smooth)
+    {
+        return (new Image ("file:///"+Paths.get(dirPathToData,"images",imageName).toString(),w,h,preserveRatio,smooth));
+    }
+
 
     /*----------------------------------
            --- EVENT HANDLERS ---
@@ -364,7 +441,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Handles the event of entering a letter by returning the letter and unpausing the main thread
      * @param event
      */
-    public void handleInput(KeyEvent event)
+    private void handleInput(KeyEvent event)
     {
         if (event.getCode().equals(KeyCode.ENTER))
         {
@@ -379,20 +456,18 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Handles the event of a closing a window or the emulation of such event.
      * @param event
      */
-    public void handleCloseRequest (WindowEvent event)
+    private void handleCloseRequest (WindowEvent event)
     {
         gameTerminated = true;
-        //gameConfig.computeIfPresent("exit", (k, v) -> true);
         synchronized(HangMan.hangman) {HangMan.hangman.notify();}
         Platform.runLater(()->gameStage.hide());
-
     }
 
     /**
      * Moves the Window Around
      * @param event
      */
-    public void moveWindow(MouseEvent event)
+    private void moveWindow(MouseEvent event)
     {
         gameStage.setX(event.getScreenX() - xOffset);
         gameStage.setY(event.getScreenY() - yOffset);
@@ -402,11 +477,30 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Get the Current Window Position
      * @param event
      */
-    public void getOffset(MouseEvent event)
+    private void getOffset(MouseEvent event)
     {
         xOffset = event.getSceneX();
         yOffset = event.getSceneY();
     }
+
+    /**
+     * Resize the hidden word label font size to fit in the window size
+     * @param e
+     */
+    private void resizeText(Observable e)
+    {
+        Platform.runLater(() -> {
+        Double fontSize = text.getFont().getSize();
+        String clippedText = Utils.computeClippedText( text.getFont(), text.getText(), text.getWidth(), text.getTextOverrun(), text.getEllipsisString() );
+        Font newFont;
+        while ( !text.getText().equals( clippedText ) && fontSize > 0.5 )
+        {
+            fontSize = fontSize - 0.05;
+            newFont = Font.font( text.getFont().getFamily(), fontSize);
+            clippedText = Utils.computeClippedText( newFont, text.getText(), text.getWidth(), text.getTextOverrun(), text.getEllipsisString() );
+        }
+        text.setStyle("-fx-font-size:"+(fontSize-4)+"px");
+     });}
     @Override
     public void handle(ActionEvent event)
     {

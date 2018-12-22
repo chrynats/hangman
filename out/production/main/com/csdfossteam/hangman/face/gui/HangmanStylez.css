@@ -8,7 +8,7 @@
 {
     -fx-background-color: transparent;
     -fx-background-repeat: no-repeat;
-    -fx-background-insets: 0,0,0,0;
+    -fx-background-insets: 0 0 0 0;
     -fx-background-radius: 0px, 0px, 0px, 0px;
     -fx-border-color: transparent;
     -fx-padding: 11 11 11 11;
@@ -61,8 +61,8 @@
 .hiddenword-label
 {
     -fx-background-color: transparent;
-    -fx-font-size: 70;
-    -fx-font-family: Aka-AcidGR-Serif;
+    -fx-font-size: 70px;
+    -fx-font-family: Aka-AcidGR-DiaryGirl;
     -fx-text-fill: whitesmoke;
     -fx-text-alignment: left;
 }
@@ -72,6 +72,48 @@
     -fx-background-color: rgba(64,64,64,1.0);
     -fx-border-color: rgba(55,55,55,1.0);
     -fx-border-width: 0 0 0 0;
-    -fx-border-radius: 0,2,0,2;
+    -fx-border-radius: 0 0 0 0;
     -fx-spacing: 5;
+}
+.exit-pane
+{
+    -fx-background-color: rgba(64,64,64,1.0);
+    -fx-border-color: rgba(64,64,64,1.0);
+    -fx-border-width: 5 5 5 5;
+}
+
+/**Costumization of The Bar where the buttons are located**/
+.exit-pane > .button-bar > .container {
+    -fx-background-color:rgba(64,64,64,1.0);
+}
+
+.exit-pane > .content.label {
+    -fx-padding: 0.5em 0.5em 0.5em 0.5em;
+    -fx-background-color: rgba(64,64,64,1.0);
+    -fx-text-fill: white;
+    -fx-font-size: 15.0 px;
+}
+
+.exit-pane *.header-panel{
+    -fx-background-color: rgba(45,88,84,1.0);
+    -fx-text-fill: white
+}
+.exit-pane *.header-panel *.label{
+    -fx-font-size: 18 px;
+    -fx-font-style: italic;
+    -fx-text-fill: white;
+    -fx-fill: white;
+}
+.exit-pane .button{
+    -fx-background-color :rgba(64,64,64,1.0);
+    -fx-text-fill: grey;
+    -fx-wrap-text: true;
+    -fx-effect: dropshadow( three-pass-box, rgba(45,88,84,1.0), 10.0, 0.0, 0.0, 0.0);
+    -fx-background-radius: 0 0 0 0;
+    -fx-cursor: hand;
+}
+.exit-pane .button:hover{
+    -fx-background-color: rgba(45,88,84,0.8);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
 }
