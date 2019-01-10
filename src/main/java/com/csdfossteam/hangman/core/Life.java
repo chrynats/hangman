@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javaapplication1;
+package com.csdfossteam.hangman.core;
 
 /**
  *
@@ -25,6 +25,12 @@ public class Life {
 
     public int getCurrent() {
         return current;
+    }
+    
+    public String getCurrentString()
+    
+    {
+        return String.valueOf(current);
     }
 
     public void printLife() {
