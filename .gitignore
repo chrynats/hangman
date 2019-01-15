@@ -27,3 +27,15 @@ target/
 hs_err_pid*
 data/fonts/TRON.TTF
 out/production/main/META-INF/main.kotlin_module
+/nbproject/private/
+/build/
+nbproject/build-impl.xml
+nbproject/genfiles.properties
+nbproject/project.properties
+nbproject/project.xml
+pom.xml
+pom.xml
+pom.xml
+.travis.yml
+build.xml
+manifest.mf

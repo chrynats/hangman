@@ -27,7 +27,7 @@ public class Handler {
     
     private DemoCLI cli;
     private HangmanGUI gui;
-    private Thread gameWindowThread;
+
     private Thread gameEngineThread;
     private inputString inputBuffer;
     private Hashtable<String,Object> gameConfig;
@@ -43,7 +43,7 @@ public class Handler {
         inputBuffer = new inputString();
         game = new GameEngine();
         cli = new DemoCLI();
-        gui = startGUI();
+        gui = (HangmanGUI) HangmanGUI.startGUIThread();
     }
 
     /**
@@ -94,17 +94,6 @@ public class Handler {
 
         }
 
-    /**
-     * Launch the JavaFX Application and Return the Current GUI Object
-      * @return HangmanGUI
-     */
-    private HangmanGUI startGUI()
-    {
-        gameWindowThread = new Thread(() -> Application.launch(HangmanGUI.class));
-        gameWindowThread.start();
-        HangmanGUI gui = HangmanGUI.getGUIinstance();
 
-        return gui;
-    }
 
 }
