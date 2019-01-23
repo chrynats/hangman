@@ -42,7 +42,11 @@ import com.csdfossteam.hangman.core.*;
 
 /**
  * <h1>Implements a Hangman GUI Class.</h1>
- *  *
+ * Note that in order to use this class you don't call its constructor.
+ * Instead call static method "startGUIThread" and casting the return to be HangmanGUI.
+ *
+ * example syntax: HangmanGUI new_gui = (HangmanGUI) HangmanGUI.startGUIThread"
+ *
  * <p>
  * <b>Note:</b> Multiplayer part is missing.
  *
@@ -60,7 +64,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
     private static final CountDownLatch latch = new CountDownLatch(1);
     private static HangmanGUI gui = null;
-
+    private static Thread gameWindowThread;
 
     public static HangmanGUI getGUIinstance() {
          try
@@ -76,6 +80,19 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     public static void setGUI(HangmanGUI gui0) {
         gui = gui0;
         latch.countDown();
+    }
+
+    /**
+     * Launch the JavaFX Application and Return the Current GUI Object
+     * @return HangmanGUI
+     */
+    public static HangmanGUI startGUIThread()
+    {
+        gameWindowThread = new Thread(() -> Application.launch(HangmanGUI.class));
+        gameWindowThread.start();
+        HangmanGUI gui = HangmanGUI.getGUIinstance();
+
+        return gui;
     }
 
 
