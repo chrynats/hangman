@@ -29,12 +29,24 @@ public class GameEngine {
     private Life life;
     Hashtable<String,Object> gameConfig;
     Hashtable<String,Object> gameState;
+    ArrayList<Player> playerList;
+    private int playIndex;
 
 
 
     public GameEngine()
     {
         gameState = new Hashtable<String,Object>();
+        playerList = new ArrayList<>();
+        playIndex = 0;
+    }
+
+    public void addPlayersList(ArrayList<Player> plList )
+    {
+        for(int i=0; i<plList.size(); i++)
+        {
+            playerList.add(plList.get(i));
+        }
     }
 
     /**
@@ -57,6 +69,7 @@ public class GameEngine {
         gameState.put("hiddenWord",words);
         gameState.put("lifes",life);
         gameState.put("test-bool",true);
+        gameState.put("playerList", playerList );
         }
         return gameState;
     }
@@ -103,12 +116,29 @@ public class GameEngine {
                 }
             }
             
-            if(!key) life.reduce();
+            if(!key)
+            {
+                gameState.get("playerList").get(playIndex).reduceLifes(c.charAt(0));
+                changePlayerIndex();
+            }
         }
 
         updateGameStatus();
 
     } catch (NullPointerException e) {updateGameStatus();}}
+
+    private void changePlayerIndex()
+    {
+        if(playIndex == playerList.size()-1 || playerIndex<0)
+        {
+            playerIndex=0;
+        }else
+        {
+            playerIndex++;
+        }
+
+    }
+
     /**
      * Check whether the Game should continue
      */

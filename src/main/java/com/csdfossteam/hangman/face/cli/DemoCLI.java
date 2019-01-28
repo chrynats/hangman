@@ -24,6 +24,7 @@ public class DemoCLI
     private Scanner scan;
     private String select;
     private boolean configured;
+    private ArrayList<Player>
     
     public DemoCLI()
     {
