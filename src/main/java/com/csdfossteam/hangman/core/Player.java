@@ -12,36 +12,46 @@ import java.util.ArrayList;
  * @author User
  */
 public class Player {
+    private String name;
     private Life lifes;
     private ArrayList<Character> wrongLetters;
-    private boolean turn;
     private String letter;
     
-    public Player(boolean t){
-        lifes=new Life(6);
+    public Player(String nm){
+        name = nm;
+        lifes=new Life();
         wrongLetters=new ArrayList<>();
-        turn=t;
-        cli = new DemoCLI();
     }
     
     public Life getLifes(){
         return lifes;
     }
+
+    public String getName() {return name;}
     
-    public ArrayList<Character> getLetters(){
+    public ArrayList<Character> getLetters()
+    {
         return wrongLetters;
     }
-    
-    public boolean turn(){
-        return turn;
-    }
-    
-    public void reduceLifes(char letter){
-        lifes.reduce();
-        wrongLetters.add(letter);
+
+    public boolean hasLetter(char letter)
+    {
+        return wrongLetters.contains(letter);
     }
 
-    public void setLifes(Life lifes) { this.lifes = lifes;}
+    public void reset()
+    {
+        lifes = new Life();
+        wrongLetters = new ArrayList<>();
+    }
+
+    public void reduceLifes(char letter)
+    {
+        lifes.reduce();
+        if (!hasLetter(letter))
+        {wrongLetters.add(letter);}
+    }
+
 
 
 }

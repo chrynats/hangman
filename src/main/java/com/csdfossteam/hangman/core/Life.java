@@ -11,11 +11,12 @@ package com.csdfossteam.hangman.core;
  */
 public class Life {
 
+    public static int MAX = 6;
     private int max;
     private int current;
 
-    public Life(int max) {
-        this.max = max;
+    public Life() {
+        this.max = MAX;
         current = max;
     }
 

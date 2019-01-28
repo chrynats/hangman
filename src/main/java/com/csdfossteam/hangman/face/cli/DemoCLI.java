@@ -5,13 +5,11 @@
  */
 package com.csdfossteam.hangman.face.cli;
 
-import com.csdfossteam.hangman.core.GameEngine;
-import com.csdfossteam.hangman.core.Life;
-import com.csdfossteam.hangman.core.WordDictionary;
-import com.csdfossteam.hangman.core.inputString;
+import com.csdfossteam.hangman.core.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
 
@@ -24,7 +22,7 @@ public class DemoCLI
     private Scanner scan;
     private String select;
     private boolean configured;
-    private ArrayList<Player>
+
     
     public DemoCLI()
     {
@@ -36,7 +34,8 @@ public class DemoCLI
 
         configured = false;
 
-        Hashtable<String,Object> configuration = new Hashtable<String,Object>();
+        Hashtable<String,Object> configuration = GameEngine.defaultConfig();
+
         do
         {
 
@@ -48,38 +47,59 @@ public class DemoCLI
                 System.out.println("3)Exit");
                 System.out.print("\nMake a selection: ");
                 select = scan.nextLine();
-                //System.out.println(isValidChoice(select,1,3));
             }
             while (!isValidChoice(select,1,4));
 
 
-
             if (Integer.parseInt(select)==1)
             {
-                if (configured)
-                    return configuration;
-                else
-                {
-                    return GameEngine.defaultConfig();
-                }
+                return configuration;
             }
             else if (Integer.parseInt(select)==2)
             {
-                File[] dict_list = WordDictionary.getDictionaries();
-                do
+                do {
+
+                    clearConsole();
+                    System.out.println("\n---------------");
+                    System.out.println("1)Select Players Number");
+                    System.out.println("2)Select Dictionary");
+                    System.out.println("3)Back");
+                    System.out.print("\nMake a selection: ");
+                    select = scan.nextLine();
+
+                }while (!isValidChoice(select,1,4));
+
+                if (Integer.parseInt(select)==1)
+                {
+                    System.out.println("\n---------------");
+                    System.out.println("\nType Amount of Players: ");
+                    select = scan.nextLine();
+
+                    ArrayList<Player> list = new ArrayList<>();
+                    for (int i=0; i<Integer.parseInt(select);i++)
                     {
+                        list.add(new Player("player"+(i+1)));
+                    }
+                    configuration.put("playerList", list);
+
+                }
+                else if (Integer.parseInt(select)==2) {
+
+                    File[] dict_list = WordDictionary.getDictionaries();
+                    do {
                         clearConsole();
-                        for (int i = 0; i < dict_list.length; i++)
-                        {
+                        for (int i = 0; i < dict_list.length; i++) {
                             System.out.println("\n---------------");
                             System.out.println("\nAvailable Dictionaries");
-                            System.out.println((i + 1)+")"+dict_list[i].getName().toUpperCase());
+                            System.out.println((i + 1) + ")" + dict_list[i].getName().toUpperCase());
                         }
                         System.out.print("\nMake a selection: ");
                         select = scan.nextLine();
                     } while (!isValidChoice(select, 1, dict_list.length));
 
-                configuration.put("dict_path",WordDictionary.getDictionaries()[Integer.parseInt(select)-1].toPath());
+                    configuration.put("dict_path", WordDictionary.getDictionaries()[Integer.parseInt(select) - 1].toPath());
+
+                }
 
                 if (configuration.containsKey("exit"))
                     configuration.computeIfPresent("exit",(k,v)->false);
