@@ -10,6 +10,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -186,30 +187,46 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     {
         Platform.runLater(() -> {
 
+        int index = 0;
+        for (VBox playerBox : playerBoxList) {
 
-        playerBoxList[activePlayer].getStyleClass().add("player-vbox-inactive");
-        for (Node boxlabel : playerBoxList[activePlayer].getChildren())
-            ((Label) boxlabel).getStyleClass().add("player-label-inactive");
+            if (index == (int) gameStatus.get("playerIndex"))
+            {
+                playerBox.getStyleClass().remove("player-vbox-inactive");
+                for (Node boxlabel : playerBox.getChildren())
+                    boxlabel.getStyleClass().remove("player-label-inactive");
+            }
+            else
+              if (playerBox.getStyleClass().size() == 1)
+              {
+                    playerBox.getStyleClass().add("player-vbox-inactive");
+                    for (Node boxlabel : playerBox.getChildren())
+                        boxlabel.getStyleClass().add("player-label-inactive");
+              }
 
-        activePlayer=(activePlayer+1)%2;
+            ((Label) playerBox.getChildren().get(1)).setText(
+                    "Letters Used: " + ((ArrayList<Player>) gameStatus.get("playerList")).get(index).getLetters());
+            index++;
+        }
 
-        playerBoxList[activePlayer].getStyleClass().remove("player-vbox-inactive");
-        for (Node boxlabel : playerBoxList[activePlayer].getChildren())
-            ((Label) boxlabel).getStyleClass().remove("player-label-inactive");
+        activePlayer = (int) gameStatus.get("playerIndex");
 
 
         text.setText(
         ((WordDictionary)gameStatus.get("hiddenWord")).getCurrentHiddenString());
 
-
         hangman_img.setImage(
-        getHangmanImages(((Life) gameStatus.get("lifes")).getCurrent()));
+        getHangmanImages(((ArrayList<Player>)gameStatus.get("playerList")).get((int)gameStatus.get("playerIndex")).getLifes().getCurrent()));
 
         input.requestFocus();
         gameStage.toFront();
 
     });
-        if (!(boolean)gameStatus.get("play")) {endGame();}
+        if (!(boolean)gameStatus.get("play"))
+        {
+            endGameMessage();
+            endGame();
+        }
         if (gameTerminated) gameState.computeIfPresent("play",(k,v)->false);
     }
 
@@ -225,6 +242,18 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return gameTerminated;
     }
 
+
+    public void endGameMessage()
+    {
+        if ((int)gameState.get("winnerIndex") == -1)
+        {
+            System.out.println("No Winner");
+        }
+        else
+        {
+            System.out.println("Winner is player #"+ (int)gameState.get("winnerIndex"));
+        }
+    }
 
     /**
      * Fire an Event to emulate an internal "window closure" event.
@@ -315,9 +344,9 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         //--- SETTING UP PLAYERS PANEL---
 
-        playerBoxList = new VBox[2];
-        playerBoxList[0] = makePlayer();
-        playerBoxList[1] = makePlayer();
+        playerBoxList = createPlayersList();
+
+        activePlayer = -1;
 
         Region backRegion = new Region();
         Region playerRegion = new Region();
@@ -336,10 +365,15 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         backButton.getStyleClass().add("exit-button");
         backButton.setOnAction(e -> endGame());
 
-        HBox playersBox = new HBox(backButton,backRegion,playerBoxList[0],playerBoxList[1],playerRegion,exitButton);
+        HBox playersBox = new HBox();
+        for (VBox playerVBox : playerBoxList)
+        {
+            playersBox.getChildren().add(playerVBox);
+        }
         playersBox.getStyleClass().add("playersbox-hbox");
 
-        activePlayer = 1;
+        HBox headerBox = new HBox(backButton,backRegion,playersBox,playerRegion,exitButton);
+        headerBox.getStyleClass().add("playersbox-hbox");
 
         //--- SETTING UP GAME WINDOW LAYOUT ---
 
@@ -347,7 +381,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         layout.setCenter(layoutCenter);
         layout.setBottom(layoutBottom);
-        layout.setTop(playersBox);
+        layout.setTop(headerBox);
         layout.setBackground(new Background(
                     new BackgroundImage(
                              findImage("background.png"),null,null,null,null)));
@@ -408,14 +442,28 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return img_list;
     }
 
+    private VBox[] createPlayersList()
+    {
+        VBox[] pList = new VBox[((ArrayList<Player>)gameConfig.get("playerList")).size()];
+
+        int index = 0;
+        for (Player player : ((ArrayList<Player>)gameConfig.get("playerList")))
+        {
+            pList[index] = makePlayer(player);
+            index++;
+        }
+
+        return pList;
+    }
+
     /**
      * Method for making a player box. To be updated when player class is implemented.
      * @return VBox
      */
-    private VBox makePlayer()
+    private VBox makePlayer(Player p)
     {
-        Label label1 = new Label("player-1");
-        Label label2 = new Label("Letters User: a, d, x, b, q, p, p, q, x");
+        Label label1 = new Label(p.getName());
+        Label label2 = new Label("Letters Used: "+p.getLetters().toString());
         label1.getStyleClass().add("player-label-active");
         label2.getStyleClass().add("player-label-active");
 
