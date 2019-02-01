@@ -9,11 +9,13 @@ import com.csdfossteam.hangman.core.*;
 import com.csdfossteam.hangman.net.HangmanLANClient;
 import com.csdfossteam.hangman.net.HangmanLANServer;
 
+import java.io.Externalizable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
+import java.util.UUID;
 
 /**
  *
@@ -62,17 +64,35 @@ public class DemoCLI
             }
             else if (Integer.parseInt(select)==2)
             {
-                String ip;
-                int port;
+                String ip = null;
+                int port = -1;
+                boolean error = false;
+
+                do {
+
                 clearConsole();
                 System.out.println("\n---------------");
-                System.out.println("Enter Host IP Address: ");
-                ip = scan.nextLine();
-                System.out.println("\n---------------");
-                System.out.println("Enter Host Port: ");
-                port = Integer.parseInt(scan.nextLine());
+                System.out.print("\nEnter Host Address [Format: \"IP:PORT\"]: ");
 
-                localClient = new HangmanLANClient(ip,port);
+
+                try
+                {select = scan.next();
+                ip = select.split(":")[0];
+                port = Integer.parseInt(select.split(":")[1]);}
+                catch (Exception e1)
+                {System.out.println("ERROR: "+e1);
+                 error = true;}
+
+                try
+                {localClient = new HangmanLANClient(ip, port);}
+                catch (Exception e2)
+                {System.out.println("ERROR: "+e2);
+                 error = true;}
+
+
+                } while ((localClient == null) || error);
+
+
 
                 System.out.println("\n---------------");
                 System.out.println("Enter your Player Name: ");
@@ -116,6 +136,7 @@ public class DemoCLI
                                 System.out.println("1)Local: ");
                                 System.out.println("2)Remote: ");
                                 System.out.println("3)Back");
+                                System.out.print("\nMake a selection: ");
                                 select = scan.nextLine();
 
                             } while (!isValidChoice(select, 1, 4));
@@ -123,7 +144,7 @@ public class DemoCLI
                             if (Integer.parseInt(select) == 1)
                             {
                                 System.out.println("\n---------------");
-                                System.out.println("Player Name: ");
+                                System.out.print("\nPlayer Name: ");
                                 select = scan.nextLine();
                                 list.add(new Player(select));
                             }
@@ -140,6 +161,7 @@ public class DemoCLI
                                 System.out.println("\n---------------");
                                 System.out.println("Host IP: " + localServer.getServerIP());
                                 System.out.println("Host Port: " + localServer.getServerPort());
+
                                 System.out.println("Waiting for a Player to Show Up.");
                                 localServer.findClient();
                                 String name = localServer.receiveFromClient(localServer.getClientNumber() - 1);

@@ -1,11 +1,8 @@
 package com.csdfossteam.hangman.net;
 
-import com.csdfossteam.hangman.core.Player;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Hashtable;
 
 /**
  * The Client class for sending socket packages to a server
@@ -85,6 +82,11 @@ public class HangmanLANClient
         ObjectInputStream is = new ObjectInputStream(remoteServerSocket.getInputStream());
 
         return is.readObject();
+    }
+
+    public boolean isConnected()
+    {
+        return remoteServerSocket.isConnected();
     }
 
 

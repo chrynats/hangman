@@ -5,19 +5,12 @@
  */
 package com.csdfossteam.hangman.net;
 
-import com.csdfossteam.hangman.core.GameEngine;
-import com.csdfossteam.hangman.core.Player;
-
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Scanner;
-
-import static com.csdfossteam.hangman.face.cli.DemoCLI.isValidChoice;
 
 /**
  * The Server class for connecting with clients.
