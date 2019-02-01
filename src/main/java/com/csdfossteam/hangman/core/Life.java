@@ -5,11 +5,13 @@
  */
 package com.csdfossteam.hangman.core;
 
+import java.io.Serializable;
+
 /**
  *
  * @author xrica_vabenee
  */
-public class Life {
+public class Life implements Serializable {
 
     public static int MAX = 6;
     private int max;

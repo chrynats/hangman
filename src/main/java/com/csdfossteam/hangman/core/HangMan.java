@@ -21,8 +21,7 @@ public class HangMan
 
     public static Object hangman;
 
-    public static void main(String[] args) throws IOException, InterruptedException
-    {
+    public static void main(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
         hangman = new Handler();
         
         ((Handler) hangman).start();

@@ -1,57 +1,91 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.csdfossteam.hangman.core;
+package com.csdfossteam.hangman.net;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import com.csdfossteam.hangman.core.Player;
+
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
-/**
- *
- * @author User
- */
-public class HangmanLANClient {
-    Socket socket;
-    String ip;
-    int port;
-    
-    public HangmanLANClient(String ip, int port) throws IOException{
-        this.ip = ip;
-        this.port = port;
-        socket = new Socket(ip,port);
+public class HangmanLANClient
+{
+    BufferedReader in;
+    PrintWriter out;
+    Socket remoteServerSocket;
+
+
+    public HangmanLANClient(String ip, int port) throws IOException {
+
+        remoteServerSocket = new Socket(ip,port);
+        in = new BufferedReader(new InputStreamReader(remoteServerSocket.getInputStream()));
+        out = new PrintWriter(remoteServerSocket.getOutputStream());
     }
-    
+
+
     public void sendToServer(String str) throws IOException
-    { 
-        OutputStreamWriter os = new OutputStreamWriter(socket.getOutputStream());
-        PrintWriter out = new PrintWriter(os);
-        os.write(str);
-        os.flush();
-    }
-    
-    public String receiveByServer() throws IOException
     {
-        
-        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        String str = br.readLine();
-        
+        out.println(str);
+        out.flush();
+    }
+    public void sendObjectToServer(Object ob) throws IOException
+    {
+        ObjectOutputStream os = new ObjectOutputStream(remoteServerSocket.getOutputStream());
+        ObjectInputStream is = new ObjectInputStream(remoteServerSocket.getInputStream());
+
+        os.writeObject(ob);
+    }
+    public String receiveFromServer() throws IOException
+    {
+        String str = in.readLine();
+
         return str;
     }
-    
-    public String getIP()
-    {
-        return ip;
+    public Object receiveObjectFromServer() throws IOException, ClassNotFoundException {
+        ObjectOutputStream os = new ObjectOutputStream(remoteServerSocket.getOutputStream());
+        ObjectInputStream is = new ObjectInputStream(remoteServerSocket.getInputStream());
+
+        return is.readObject();
     }
-    
-    public int getPort()
-    {
-        return port;
+
+
+    public static void runClientDemo() throws IOException, ClassNotFoundException {
+
+        boolean exit = false;
+        HangmanLANClient client = new HangmanLANClient("192.168.1.21",6666);
+
+        while(!exit) {
+            System.out.println("Waiting Server Command");
+            String data = client.receiveFromServer();
+            if (data.equals("play"))
+            {
+                System.out.println("Waiting for Object");
+                Hashtable<String,Object> config = (Hashtable) client.receiveObjectFromServer();
+                ((ArrayList<Player>) ((Hashtable<String, Object>)config).get("playerList")).add(new Player("player3"));
+                System.out.println("Sending Object");
+                client.sendObjectToServer(config);
+
+            }
+            else if (data.equals(("not")))
+            {
+                client.sendToServer("Weakling!");
+            }
+            else if (data.equals("."))
+            {
+                client.sendToServer("Leave and let Live?");
+                exit = true;
+            }
+            else
+            {
+                client.sendToServer("Unknown Command!");
+            }
+        }
+
     }
-    
+
+    public static void main (String[] args) throws IOException, ClassNotFoundException
+    {
+        HangmanLANServer.runServerDemo();
+    }
+
+
 }

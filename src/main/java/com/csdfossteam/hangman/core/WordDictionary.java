@@ -17,24 +17,19 @@ import java.util.stream.Stream;
  *
  * @author xrica_vabenee
  */
-public class WordDictionary {
+public class WordDictionary implements Serializable{
 
     private String st;
-    public File f;
-    private Path file_path;
-    private BufferedReader br;
+    private String file_path;
     private int listLength;
-    private Random rand;
-    private int select;
     private String current;
     private ArrayList<Character> currentHidden;
 
-    public WordDictionary(Path dict_path) throws IOException
+    public WordDictionary(String dict_path) throws IOException
     {
         st = new String();
         file_path = dict_path;
         listLength = 0;
-        rand = new Random();
         current = new String();
         currentHidden = new ArrayList<Character>();
 
@@ -43,8 +38,9 @@ public class WordDictionary {
 
     private void countWordList() throws IOException 
     {
-        f = new File(file_path.toString());
-        br = new BufferedReader(new FileReader(f));
+        File f = new File(file_path);
+
+        BufferedReader br = new BufferedReader(new FileReader(f));
         
         while ((st = br.readLine()) != null) {
             listLength++;
@@ -53,15 +49,16 @@ public class WordDictionary {
     
     public void changeFile(String dict_file) throws IOException
     {
-        file_path = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries",dict_file);
+        file_path = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries",dict_file).toString();
         
         countWordList();   
     }
 
     public void pickRandomWord() throws IOException
     {
-        select = rand.nextInt(listLength);
-        Stream<String> lines = Files.lines(file_path);
+        Random rand = new Random();
+        int select = rand.nextInt(listLength);
+        Stream<String> lines = Files.lines(Paths.get(file_path));
         current = lines.skip(select).findFirst().get().toLowerCase();
 
     }

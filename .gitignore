@@ -39,3 +39,4 @@ pom.xml
 .travis.yml
 build.xml
 manifest.mf
+src/main/java/com/csdfossteam/hangman/net/TestSerialization.java

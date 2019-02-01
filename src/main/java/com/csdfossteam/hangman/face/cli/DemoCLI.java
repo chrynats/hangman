@@ -6,6 +6,8 @@
 package com.csdfossteam.hangman.face.cli;
 
 import com.csdfossteam.hangman.core.*;
+import com.csdfossteam.hangman.net.HangmanLANClient;
+import com.csdfossteam.hangman.net.HangmanLANServer;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class DemoCLI
     private Scanner scan;
     private String select;
     private boolean configured;
+    private int remotePlayers;
 
     
     public DemoCLI()
@@ -33,8 +36,10 @@ public class DemoCLI
     public Hashtable<String,Object> config () throws IOException {
 
         configured = false;
-
         Hashtable<String,Object> configuration = GameEngine.defaultConfig();
+        HangmanLANServer localServer = null;
+        HangmanLANClient localClient = null;
+
 
         do
         {
@@ -43,12 +48,12 @@ public class DemoCLI
                 clearConsole();
                 System.out.println("\n---------------");
                 System.out.println("1)Start Game");
-                System.out.println("2)Configure Game");
-                System.out.println("3)Exit");
+                System.out.println("2)Join Game");
+                System.out.println("3)Configure Game");
+                System.out.println("4)Exit");
                 System.out.print("\nMake a selection: ");
                 select = scan.nextLine();
-            }
-            while (!isValidChoice(select,1,4));
+            } while (!isValidChoice(select,1,4));
 
 
             if (Integer.parseInt(select)==1)
@@ -57,57 +62,129 @@ public class DemoCLI
             }
             else if (Integer.parseInt(select)==2)
             {
-                do {
+                String ip;
+                int port;
+                clearConsole();
+                System.out.println("\n---------------");
+                System.out.println("Enter Host IP Address: ");
+                ip = scan.nextLine();
+                System.out.println("\n---------------");
+                System.out.println("Enter Host Port: ");
+                port = Integer.parseInt(scan.nextLine());
 
-                    clearConsole();
-                    System.out.println("\n---------------");
-                    System.out.println("1)Select Players Number");
-                    System.out.println("2)Select Dictionary");
-                    System.out.println("3)Back");
-                    System.out.print("\nMake a selection: ");
-                    select = scan.nextLine();
+                localClient = new HangmanLANClient(ip,port);
 
-                }while (!isValidChoice(select,1,4));
+                System.out.println("\n---------------");
+                System.out.println("Enter your Player Name: ");
+                select = scan.nextLine();
+                localClient.sendToServer(select);
 
-                if (Integer.parseInt(select)==1)
-                {
-                    System.out.println("\n---------------");
-                    System.out.println("\nType Amount of Players: ");
-                    select = scan.nextLine();
+                configuration.put("isClient",true);
 
-                    ArrayList<Player> list = new ArrayList<>();
-                    for (int i=0; i<Integer.parseInt(select);i++)
-                    {
-                        list.add(new Player("player"+(i+1)));
-                    }
-                    configuration.put("playerList", list);
+                System.out.println("\n---------------");
+                System.out.println("Keep Calm and Wait for you Host!");
 
-                }
-                else if (Integer.parseInt(select)==2) {
+                configuration.put("localNetwork",localClient);
 
-                    File[] dict_list = WordDictionary.getDictionaries();
-                    do {
-                        clearConsole();
-                        for (int i = 0; i < dict_list.length; i++) {
-                            System.out.println("\n---------------");
-                            System.out.println("\nAvailable Dictionaries");
-                            System.out.println((i + 1) + ")" + dict_list[i].getName().toUpperCase());
-                        }
-                        System.out.print("\nMake a selection: ");
-                        select = scan.nextLine();
-                    } while (!isValidChoice(select, 1, dict_list.length));
-
-                    configuration.put("dict_path", WordDictionary.getDictionaries()[Integer.parseInt(select) - 1].toPath());
-
-                }
-
-                if (configuration.containsKey("exit"))
-                    configuration.computeIfPresent("exit",(k,v)->false);
-                else
-                    configuration.put("exit",false);
+                return configuration;
 
             }
             else if (Integer.parseInt(select)==3)
+            {
+                do {
+
+
+                    do {
+
+                        clearConsole();
+                        System.out.println("\n---------------");
+                        System.out.println("1)Add Player (selecting this will reset default players)");
+                        System.out.println("2)Select Dictionary");
+                        System.out.println("3)Back");
+                        System.out.print("\nMake a selection: ");
+                        select = scan.nextLine();
+
+                    } while (!isValidChoice(select, 1, 4));
+
+                    if (Integer.parseInt(select) == 1)
+                    {
+                        ArrayList<Player> list = new ArrayList<>();
+                        do {
+
+                            do {
+                                System.out.println("\n---------------");
+                                System.out.println("1)Local: ");
+                                System.out.println("2)Remote: ");
+                                System.out.println("3)Back");
+                                select = scan.nextLine();
+
+                            } while (!isValidChoice(select, 1, 4));
+
+                            if (Integer.parseInt(select) == 1)
+                            {
+                                System.out.println("\n---------------");
+                                System.out.println("Player Name: ");
+                                select = scan.nextLine();
+                                list.add(new Player(select));
+                            }
+                            else if (Integer.parseInt(select) == 2)
+                            {
+
+
+
+                                if (localServer == null)
+                                {
+                                    localServer = new HangmanLANServer(Handler.defaultPort);
+                                }
+
+                                System.out.println("\n---------------");
+                                System.out.println("Host IP: " + localServer.getServerIP());
+                                System.out.println("Host Port: " + localServer.getServerPort());
+                                System.out.println("Waiting for a Player to Show Up.");
+                                localServer.findClient();
+                                String name = localServer.receiveFromClient(localServer.getClientNumber() - 1);
+                                list.add(new Player(name, localServer.getClientNumber() - 1));
+                                System.out.println("\nPlayer " + name + " added to list. yay!");
+                                configuration.put("isHost", true);
+                                configuration.put("localNetwork",localServer);
+                            }
+                            else
+                                break;
+
+                            configuration.put("playerList", list);
+
+                        } while (true);
+                    }
+                    else if (Integer.parseInt(select) == 2)
+                    {
+                        File[] dict_list = WordDictionary.getDictionaries();
+                        do {
+                            clearConsole();
+                            for (int i = 0; i < dict_list.length; i++) {
+                                System.out.println("\n---------------");
+                                System.out.println("Available Dictionaries");
+                                System.out.println((i + 1) + ")" + dict_list[i].getName().toUpperCase());
+                            }
+                            System.out.print("\nMake a selection: ");
+                            select = scan.nextLine();
+                        } while (!isValidChoice(select, 1, dict_list.length));
+
+                        configuration.put("dict_path", WordDictionary.getDictionaries()[Integer.parseInt(select) - 1].toPath());
+
+                    }
+                    else
+                    {
+                        if (configuration.containsKey("exit"))
+                            configuration.computeIfPresent("exit", (k, v) -> false);
+                        else
+                            configuration.put("exit", false);
+                        break;
+                    }
+
+
+                } while(true);
+            }
+            else if (Integer.parseInt(select)==4)
             {
                 if (configuration.containsKey("exit"))
                     configuration.computeIfPresent("exit",(k,v)->true);

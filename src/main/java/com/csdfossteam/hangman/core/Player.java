@@ -5,22 +5,32 @@
  */
 package com.csdfossteam.hangman.core;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author User
  */
-public class Player {
+public class Player implements Serializable {
+
+
+
     private String name;
     private Life lifes;
     private ArrayList<Character> wrongLetters;
     private String letter;
-    
+    private int remoteIndex;
+
+    public Player(String nm, int remote){
+        this(nm);
+        remoteIndex = remote;
+    }
     public Player(String nm){
         name = nm;
         lifes=new Life();
         wrongLetters=new ArrayList<>();
+        remoteIndex = -1;
     }
     
     public Life getLifes(){
@@ -50,6 +60,11 @@ public class Player {
         lifes.reduce();
         if (!hasLetter(letter))
         {wrongLetters.add(letter);}
+    }
+
+    public int getRemoteIndex()
+    {
+        return remoteIndex;
     }
 
 

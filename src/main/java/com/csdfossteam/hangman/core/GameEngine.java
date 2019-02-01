@@ -67,7 +67,7 @@ public class GameEngine {
         if (play()){
         addPlayersList((ArrayList<Player>) config.get("playerList"));
         for (Player p : playerList) p.reset();
-        words = new WordDictionary((Path)config.get("dict_path"));
+        words = new WordDictionary((String)config.get("dict_path"));
         words.pickRandomWord();
         words.createDashes(true);
         gameConfig = config;
@@ -219,15 +219,22 @@ public class GameEngine {
      * @return Hashtable<String,Object>
      * @throws IOException
      */
+
+    public int remotePlayer()
+    {
+        return ((ArrayList<Player>)gameState.get("playerList")).get((int)gameState.get("playerIndex")).getRemoteIndex();
+    }
+
     public static Hashtable<String,Object> defaultConfig() throws IOException {
 
         Hashtable<String,Object> configuration = new Hashtable<String,Object>();
-        configuration.put("dict_path",WordDictionary.getDictionaries()[0].toPath());
+        configuration.put("dict_path",WordDictionary.getDictionaries()[0].toString());
         configuration.put("exit",false);
         ArrayList<Player> list = new ArrayList<>();
         list.add(new Player("player1"));
-        list.add(new Player("player2"));
         configuration.put("playerList",list);
+        configuration.put("isClient",false);
+        configuration.put("isHost",false);
 
         return configuration;
     }
