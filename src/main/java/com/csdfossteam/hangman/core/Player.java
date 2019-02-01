@@ -9,7 +9,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
+ * A Simple class implementing the player entity
  *
+ * Note: Made serializable for socket handling
  * @author User
  */
 public class Player implements Serializable {

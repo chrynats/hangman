@@ -57,7 +57,7 @@ public class Handler {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void start() throws IOException, InterruptedException, ClassNotFoundException {
+    public void start() throws Exception {
 
 
         do {
@@ -70,7 +70,7 @@ public class Handler {
 
             /*------ GAME PART ------*/
 
-
+            //Choose the appropriate loop for each game configuration
             if ((boolean)gameConfig.get("isClient"))
                 runClientLoop();
             else if ((boolean)gameConfig.get("isHost"))
@@ -85,7 +85,11 @@ public class Handler {
 
     }
 
-
+    /**
+     * Exectures a basic loop alternating between players in the same GUI Window
+     * @throws InterruptedException
+     * @throws IOException
+     */
     private void runLocalLoop() throws InterruptedException, IOException {
 
 
@@ -115,6 +119,11 @@ public class Handler {
 
     }
 
+    /**
+     * Executes a loop based on the local loop with the addition of remote initiations, update, and inputs
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private void runHostLoop() throws IOException, InterruptedException {
         //Initialize game parameters that are outside the constructor?
         gameState = game.init(gameConfig);
@@ -163,6 +172,12 @@ public class Handler {
         localServer.freeClients();
     }
 
+    /**
+     * Implements a client-type loop that only initiates the gui, updates it and sends input to host
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws java.lang.InterruptedException
+     */
     private void runClientLoop() throws IOException, ClassNotFoundException, java.lang.InterruptedException {
 
 

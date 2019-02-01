@@ -20,8 +20,17 @@ import java.util.Scanner;
 import static com.csdfossteam.hangman.face.cli.DemoCLI.isValidChoice;
 
 /**
+ * The Server class for connecting with clients.
  *
- * @author User
+ * For each client a thread is created and the main class keeps a list and provides easy access to them.
+ *
+ * Implementation is generic enough to apply to other application
+ *
+ * Note: Every object send, or every object the send object contains MUST be serializable.
+ *       For custom classes, if every class they contain is serializable add "implements serializable" to it
+ *       It should serialize automatically if it meets the above prerequisite
+ *
+ * @author nasioutz
  */
 public class HangmanLANServer extends Thread {
 
@@ -29,12 +38,21 @@ public class HangmanLANServer extends Thread {
     ArrayList<serverThread> clientThreadtList;
 
 
+    /**
+     * Create a Server on a port
+     * @param port
+     * @throws IOException
+     */
     public HangmanLANServer(int port) throws IOException {
         serverSocket = new ServerSocket(port);
         clientThreadtList = new ArrayList<>();
     }
 
-
+    /**
+     * Wait for a client to appear, create a thread and add to list
+     * @return
+     * @throws IOException
+     */
     public int findClient() throws IOException {
 
 
@@ -44,46 +62,89 @@ public class HangmanLANServer extends Thread {
 
     }
 
-
+    /**
+     * Provide access to client socket
+     * @param i
+     * @return Socket
+     */
     public Socket getClient(int i)
     {
         return clientThreadtList.get(i).getClient();
     }
 
+    /**
+     * Wait for client with index i to send string
+     * @param i
+     */
     public String receiveFromClient(int i) throws IOException
     {
         String str = clientThreadtList.get(i).receiveFromClient();
         return str;
     }
 
+    /**
+     * Send String to client with index i
+     * @param i
+     * @param str
+     * @throws IOException
+     */
     public void sendToClient(int i, String str) throws IOException
     {
         clientThreadtList.get(i).sendToClient(str);
     }
 
+    /**
+     * Wait for client with index i to send an object
+     * @param i
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public Object receiveObjectFromClient(int i) throws IOException, ClassNotFoundException
     {
         return clientThreadtList.get(i).receiveObjectFromClient();
     }
 
+    /**
+     * Send object to client with index i
+     * @param i
+     * @param ob
+     * @throws IOException
+     */
     public void sendObjectToClient(int i,Object ob) throws IOException
     {
         clientThreadtList.get(i).sendObjectToClient(ob);
     }
 
-
+    /**
+     * Get previously selected port
+     * @return int
+     */
     public int getServerPort() {
         return serverSocket.getLocalPort();
     }
 
+    /**
+     * Get current machine's Local IP
+     * @return String
+     * @throws UnknownHostException
+     */
     public String getServerIP() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostAddress();
     }
 
+    /**
+     * Get total number of clients attached to server
+     * @return int
+     */
     public int getClientNumber() {
         return clientThreadtList.size();
     }
 
+    /**
+     * Close all client sockets, clear the list and close server socket
+     * @throws IOException
+     */
     public void freeClients() throws IOException {
         for (serverThread sThr : clientThreadtList)
         {
@@ -94,48 +155,12 @@ public class HangmanLANServer extends Thread {
         serverSocket.close();
     }
 
-    public static void runServerDemo() throws IOException, ClassNotFoundException {
-        Scanner scan = new Scanner(System.in);
-
-        HangmanLANServer serv = new HangmanLANServer(6666);
-        System.out.println(serv.getServerIP());
-
-
-        int clientIndex = serv.findClient();
-
-        boolean exit = false;
-        String select;
-
-        do {
-            do {
-                System.out.println("Found Client in IP: " + serv.getClient(clientIndex).getInetAddress());
-                System.out.println("1.Play | 2.Don't Play | 3. Exit");
-                select = scan.nextLine();
-            } while (!isValidChoice(select, 1, 4));
-
-            if (Integer.parseInt(select) == 1) {
-                serv.sendToClient(clientIndex, "play");
-                Hashtable<String, Object> gameConfig = GameEngine.defaultConfig();
-                System.out.println("Sending...");
-                serv.sendObjectToClient(clientIndex, gameConfig);
-                System.out.println("Receiving...");
-                gameConfig = (Hashtable<String, Object>) serv.receiveObjectFromClient(clientIndex);
-                System.out.println(((ArrayList<Player>) gameConfig.get("playerList")).size());
-                //System.out.println(gameConfig.get("PlayerNumber"));
-
-            } else if (Integer.parseInt(select) == 2) {
-                serv.sendToClient(clientIndex, "not");
-                String data = serv.receiveFromClient(clientIndex);
-                System.out.println("Response: " + data);
-            } else if (Integer.parseInt(select) == 3) {
-                serv.sendToClient(clientIndex, ".");
-                exit = true;
-            }
-
-        } while (!exit);
-    }
-
-
+    /**
+     * Implements a thread to handle each client.
+     *
+     * Method names are identical to the main server handler but address the specific client socket
+     *
+     */
     public static class serverThread {
 
         private Socket clientSocket;
@@ -181,15 +206,7 @@ public class HangmanLANServer extends Thread {
             clientSocket.close();
         }
 
-
-
-
-
-
-
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        HangmanLANServer.runServerDemo();
-    }
+
 }

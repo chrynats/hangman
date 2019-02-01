@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.csdfossteam.hangman.HangMan;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.IntegerProperty;
@@ -48,11 +49,8 @@ import com.csdfossteam.hangman.core.*;
  *
  * example syntax: HangmanGUI new_gui = (HangmanGUI) HangmanGUI.startGUIThread"
  *
- * <p>
- * <b>Note:</b> Multiplayer part is missing.
- *
  * @author  nasioutz
- * @version 0.8
+ * @version 1.0
  * @since   2018-17-12
  */
 public class HangmanGUI extends Application implements EventHandler<ActionEvent>
@@ -116,12 +114,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     private Stage gameStage; //Public to be accessible from outside it's thread
     private Alert exitGameAlert;
     private VBox[] playerBoxList;
-
     private String dirPath = new java.io.File( "." ).getCanonicalPath();
-    private String dirPathToData = Paths.get(dirPath,"data").toString();
+    private String dirPathToData = Paths.get(dirPath,"data").toString();//"src","main","resources","com","csdfossteam","hangman","face","gui"
     private inputString handlersInput = new inputString("");
     private Hashtable<String,Object> gameConfig,gameState;
-    private int activePlayer;
     private boolean gameTerminated;
     private double xOffset = 0, yOffset = 0;
 
@@ -187,6 +183,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     {
         Platform.runLater(() -> {
 
+        // Switch player box appearance based on active player
         int index = 0;
         for (VBox playerBox : playerBoxList) {
 
@@ -209,19 +206,21 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
             index++;
         }
 
-        activePlayer = (int) gameStatus.get("playerIndex");
 
-
+        //Update main word text
         text.setText(
         ((WordDictionary)gameStatus.get("hiddenWord")).getCurrentHiddenString());
 
+        //Update "hangman" image based on current players lifes
         hangman_img.setImage(
         getHangmanImages(((ArrayList<Player>)gameStatus.get("playerList")).get((int)gameStatus.get("playerIndex")).getLifes().getCurrent()));
 
+        //Attempt to get window in focus
         input.requestFocus();
         gameStage.toFront();
 
     });
+        //Check for game termination and end-of-play
         if (!(boolean)gameStatus.get("play"))
         {
             endGameMessage();
@@ -242,7 +241,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return gameTerminated;
     }
 
-
+    /**
+     * Implements a basic end-game window
+     * Note: Demo mode
+     */
     public void endGameMessage()
     {
         if ((int)gameState.get("winnerIndex") == -1)
@@ -346,8 +348,6 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         playerBoxList = createPlayersList();
 
-        activePlayer = -1;
-
         Region backRegion = new Region();
         Region playerRegion = new Region();
         HBox.setHgrow(backRegion, Priority.ALWAYS);
@@ -442,6 +442,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return img_list;
     }
 
+    /**
+     * Create a VBox list for each player in the games configuration
+     * @return
+     */
     private VBox[] createPlayersList()
     {
         VBox[] pList = new VBox[((ArrayList<Player>)gameConfig.get("playerList")).size()];

@@ -17,7 +17,7 @@ import java.util.Scanner;
 
 /**
  *
- * @author Aradon
+ * @author nasioutz
  */
 public class DemoCLI 
 {
@@ -33,7 +33,7 @@ public class DemoCLI
     }
 
 
-    public Hashtable<String,Object> config () throws IOException {
+    public Hashtable<String,Object> config () throws Exception {
 
         configured = false;
         Hashtable<String,Object> configuration = GameEngine.defaultConfig();
@@ -169,7 +169,7 @@ public class DemoCLI
                             select = scan.nextLine();
                         } while (!isValidChoice(select, 1, dict_list.length));
 
-                        configuration.put("dict_path", WordDictionary.getDictionaries()[Integer.parseInt(select) - 1].toPath());
+                        configuration.put("dict_path", WordDictionary.getDictionaries()[Integer.parseInt(select) - 1].toString());
 
                     }
                     else

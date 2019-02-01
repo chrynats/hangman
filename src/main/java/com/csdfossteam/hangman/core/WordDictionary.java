@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 /**
  *
- * @author xrica_vabenee
+ * @author xrica_vabenee, nasioutz
  */
 public class WordDictionary implements Serializable{
 
@@ -139,7 +139,7 @@ public class WordDictionary implements Serializable{
     }
 
 
-    public static File[] getDictionaries() throws IOException
+    public static File[] getDictionaries() throws Exception
     {
         String dirName = Paths.get(new java.io.File( "." ).getCanonicalPath(), "data","dictionaries").toString();
         return getFiles(dirName,".txt");
