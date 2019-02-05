@@ -41,3 +41,5 @@ build.xml
 manifest.mf
 src/main/java/com/csdfossteam/hangman/net/TestSerialization.java
 src/main/main.iml
+data/images/client-connecting-padded.gif
+data/dictionaries/demoWords.txt
