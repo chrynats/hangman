@@ -42,7 +42,6 @@ public class DemoCLI
         HangmanLANServer localServer = null;
         HangmanLANClient localClient = null;
 
-
         do
         {
 
@@ -107,6 +106,8 @@ public class DemoCLI
                 configuration.put("localNetwork",localClient);
 
                 return configuration;
+
+
 
             }
             else if (Integer.parseInt(select)==3)
@@ -182,9 +183,9 @@ public class DemoCLI
                         File[] dict_list = WordDictionary.getDictionaries();
                         do {
                             clearConsole();
+                            System.out.println("\n---------------");
+                            System.out.println("Available Dictionaries");
                             for (int i = 0; i < dict_list.length; i++) {
-                                System.out.println("\n---------------");
-                                System.out.println("Available Dictionaries");
                                 System.out.println((i + 1) + ")" + dict_list[i].getName().toUpperCase());
                             }
                             System.out.print("\nMake a selection: ");

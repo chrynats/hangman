@@ -40,3 +40,4 @@ pom.xml
 build.xml
 manifest.mf
 src/main/java/com/csdfossteam/hangman/net/TestSerialization.java
+src/main/main.iml

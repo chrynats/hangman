@@ -19,20 +19,24 @@ public class Player implements Serializable {
 
 
     private String name;
+    private String remoteTag;
     private Life lifes;
     private ArrayList<Character> wrongLetters;
     private String letter;
     private int remoteIndex;
 
+
     public Player(String nm, int remote){
         this(nm);
         remoteIndex = remote;
+        remoteTag = "Remote";
     }
     public Player(String nm){
         name = nm;
         lifes=new Life();
         wrongLetters=new ArrayList<>();
         remoteIndex = -1;
+        remoteTag = "Local";
     }
     
     public Life getLifes(){
@@ -68,6 +72,8 @@ public class Player implements Serializable {
     {
         return remoteIndex;
     }
+
+    public String getRemoteTag() {return remoteTag;}
 
 
 

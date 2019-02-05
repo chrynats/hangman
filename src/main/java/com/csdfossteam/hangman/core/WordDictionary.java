@@ -6,6 +6,7 @@
 package com.csdfossteam.hangman.core;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,7 +59,8 @@ public class WordDictionary implements Serializable{
     {
         Random rand = new Random();
         int select = rand.nextInt(listLength);
-        Stream<String> lines = Files.lines(Paths.get(file_path));
+        Stream<String> lines = Files.lines(Paths.get(file_path), Charset.forName("UTF-8"));
+
         current = lines.skip(select).findFirst().get().toLowerCase();
 
     }

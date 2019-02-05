@@ -65,7 +65,7 @@ public class Handler {
             /*---- SETTINGS PART ----*/
 
             //Start the Settings Window
-            gameConfig = cli.config();
+            gameConfig = gui.config();
             //gameConfig = GameEngine.defaultConfig();
 
             /*------ GAME PART ------*/
@@ -99,7 +99,7 @@ public class Handler {
 
         //Start Game Window GUI
         if (game.play()) {
-            gui.init(gameConfig, gameState);
+            gui.initGame(gameConfig, gameState);
         } //cli.init(gameConfig,gameState);
 
         while (game.play()) {
@@ -134,7 +134,7 @@ public class Handler {
 
         //Start Game Window GUI
         if (game.play()) {
-            gui.init(gameConfig, gameState);
+            gui.initGame(gameConfig, gameState);
             for (int i = 0;i<localServer.getClientNumber();i++)
             {
                 localServer.sendToClient(i,"init");
@@ -186,11 +186,13 @@ public class Handler {
 
         String signal;
         do {
+            gui.waitSplashScreen(true);
             signal = localClient.receiveFromServer();
+            gui.waitSplashScreen(false);
             if (signal.equals("init")) {
                 gameConfig = (Hashtable) localClient.receiveObjectFromServer();
                 gameState = (Hashtable) localClient.receiveObjectFromServer();
-                gui.init(gameConfig, gameState);
+                gui.initGame(gameConfig, gameState);
             }
         }while (!signal.equals("init"));
 
