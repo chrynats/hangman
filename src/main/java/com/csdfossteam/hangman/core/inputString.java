@@ -1,5 +1,8 @@
 package com.csdfossteam.hangman.core;
 
+/**
+ * A Simple wrapper class for a String
+ */
 public class inputString
 {
     private String[] array;

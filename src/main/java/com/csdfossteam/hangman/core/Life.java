@@ -5,11 +5,15 @@
  */
 package com.csdfossteam.hangman.core;
 
+import java.io.Serializable;
+
 /**
+ * A Simple Class Implementing the players Lifes
  *
+ * Note: Made serializable for socket handling
  * @author xrica_vabenee
  */
-public class Life {
+public class Life implements Serializable {
 
     public static int MAX = 6;
     private int max;

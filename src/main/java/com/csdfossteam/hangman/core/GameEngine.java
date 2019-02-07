@@ -34,7 +34,9 @@ public class GameEngine {
     private int playerIndex;
 
 
-
+    /**
+     * Simple Contructor for GameEngine
+     */
     public GameEngine()
     {
         gameState = new Hashtable<String,Object>();
@@ -43,6 +45,10 @@ public class GameEngine {
         winnerIndex = -1;
     }
 
+    /**
+     * Add Players to Player List from a Similar List
+     * @param plList
+     */
     public void addPlayersList(ArrayList<Player> plList )
     {
         for(int i=0; i<plList.size(); i++)
@@ -67,7 +73,7 @@ public class GameEngine {
         if (play()){
         addPlayersList((ArrayList<Player>) config.get("playerList"));
         for (Player p : playerList) p.reset();
-        words = new WordDictionary((Path)config.get("dict_path"));
+        words = new WordDictionary((String)config.get("dict_path"));
         words.pickRandomWord();
         words.createDashes(true);
         gameConfig = config;
@@ -80,6 +86,9 @@ public class GameEngine {
         return gameState;
     }
 
+    /**
+     * Moves the playerIndex to the next player in cyclical fashion
+     */
     private void changePlayerIndex()
     {
         if( (int) gameState.get("playerIndex") == ((ArrayList<Player>) gameConfig.get("playerList")).size() -1 || playerIndex<0)
@@ -212,6 +221,16 @@ public class GameEngine {
     }
 
     /**
+     * Returns information on the whether the current player is a remote (LAN) player
+     * @return (int) -1 if player is local, her "remote index" if remote (which corresponds to the client thread index hopefully)
+     */
+    public int remotePlayer()
+    {
+        return ((ArrayList<Player>)gameState.get("playerList")).get((int)gameState.get("playerIndex")).getRemoteIndex();
+    }
+
+
+    /**
      * Returns a default configuration for quick game
      *
      * <b>reference for what the UI classes need to implement<b/>
@@ -219,15 +238,16 @@ public class GameEngine {
      * @return Hashtable<String,Object>
      * @throws IOException
      */
-    public static Hashtable<String,Object> defaultConfig() throws IOException {
+    public static Hashtable<String,Object> defaultConfig() throws Exception {
 
         Hashtable<String,Object> configuration = new Hashtable<String,Object>();
-        configuration.put("dict_path",WordDictionary.getDictionaries()[0].toPath());
+        configuration.put("dict_path",WordDictionary.getDictionaries()[0].toString());
         configuration.put("exit",false);
         ArrayList<Player> list = new ArrayList<>();
         list.add(new Player("player1"));
-        list.add(new Player("player2"));
         configuration.put("playerList",list);
+        configuration.put("isClient",false);
+        configuration.put("isHost",false);
 
         return configuration;
     }

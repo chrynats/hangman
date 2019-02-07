@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.csdfossteam.hangman.core;
+package com.csdfossteam.hangman;
 
+
+import com.csdfossteam.hangman.core.Handler;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,8 +23,7 @@ public class HangMan
 
     public static Object hangman;
 
-    public static void main(String[] args) throws IOException, InterruptedException
-    {
+    public static void main(String[] args) throws Exception {
         hangman = new Handler();
         
         ((Handler) hangman).start();
