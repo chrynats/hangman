@@ -49,7 +49,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
@@ -116,7 +115,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     public HangmanGUI() throws IOException {
         setGUI(this);
         sceneTable = new Hashtable<String,Scene>();
-        createSplashScreen();
+        createSplashStage();
     }
 
 
@@ -124,6 +123,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     --- NON STATIC PART OF THE CLASS ---
     ------------------------------------*/
 
+    private boolean gameTerminated;
     private TextField input;
     private Label text;
     private ImageView hangman_img;
@@ -137,7 +137,6 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     private String dirPathToData = Paths.get(dirPath,"data").toString();//"src","main","resources","com","csdfossteam","hangman","face","gui"
     private inputString handlersInput = new inputString("");
     private Hashtable<String,Object> gameConfig,gameState;
-    private boolean gameTerminated;
     private double xOffset = 0, yOffset = 0;
 
     private IntegerProperty splash_width = new SimpleIntegerProperty(this,"scene_width",550);
@@ -206,6 +205,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     {
         Platform.runLater(() -> {
 
+        gameState = gameStatus;
+
         // Switch player box appearance based on active player
         int index = 0;
         for (VBox playerBox : playerBoxList) {
@@ -250,8 +251,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         //Check for game termination and end-of-play
         if (!(boolean)gameStatus.get("play"))
         {
-            endGameMessage();
-            endGame(gameStage);
+            endGameMessage(gameStatus);
+            endGame(gameStage,750);
         }
         if (gameTerminated) gameState.computeIfPresent("play",(k,v)->false);
     }
@@ -268,44 +269,55 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return gameTerminated;
     }
 
+    /**
+     * Creates and starts the main menu window
+     * @return Hashtable<String, Object>
+     * @throws Exception
+     */
     public Hashtable<String, Object> config() throws Exception
     {
-        //gameConfig = config;
+        //Copy the default settings as a base
         gameConfig = GameEngine.defaultConfig();
+
+        //Create Server/Client Objects
         HangmanLANServer localServer = null;
         HangmanLANClient localClient = null;
 
+        //Run Creation and Display of main window on JavaFX Thread
         Platform.runLater(() -> {
-
-            try {
-                createConfigStage();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
+            createConfigStage();
             configStage.show();
         });
 
+        //Make main thread for configuration to finish
         synchronized(HangMan.hangman) {HangMan.hangman.wait();}
 
         return gameConfig;
-
     }
 
 
     /**
      * Implements a basic end-game window
-     * Note: Demo mode
      */
-    public void endGameMessage()
+    public void endGameMessage(Hashtable<String,Object> gameStatus)
     {
-        if ((int)gameState.get("winnerIndex") == -1)
+        if ((int)gameStatus.get("winnerIndex") == -1)
         {
-            System.out.println("No Winner");
+            runAlert(Alert.AlertType.INFORMATION,
+                    "Game Over",
+                    "The Game is Over",
+                    "...but no one won! Good luck next time",
+                    "exit-white.png");
         }
         else
         {
-            System.out.println("Winner is player #"+ (int)gameState.get("winnerIndex"));
+            runAlert(Alert.AlertType.INFORMATION,
+                    "Game Over",
+                    "The Game is Over",
+                    "The Winner is, "+
+                                ((ArrayList<Player>)gameStatus.get("playerList")).get((int)gameState.get("winnerIndex")).getName()+
+                                "!\nEveryone else try your best next time",
+                    "exit-white.png");
         }
     }
 
@@ -316,15 +328,40 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      */
     public void terminate()
     {
-        Platform.runLater(() -> Platform.exit());
+        Platform.runLater(() -> {Platform.exit();});
     }
 
+    /**
+     * Request the UI to behave as if the game has normaly ended
+     */
+    public void endOnMainThread()
+    {
+        Platform.runLater(() -> {gameTerminated = true; gameStage.hide();});
+    }
+
+    /**
+     * Toggle splash screen on/off
+     * @param boolean
+     */
     public void waitSplashScreen(boolean toggle)
     {
         if (toggle)
             Platform.runLater(() -> splashStage.show());
         else
             Platform.runLater(() -> splashStage.hide());
+    }
+
+    /**
+     * Create and Show an Alert Window on the JavaFX Thread
+     * @param Alert.AlertType type
+     * @param String error_title
+     * @param String header_message
+     * @param String content_text
+     * @param String icon_name
+     */
+    public void runAlert(Alert.AlertType type, String error_title, String header_message, String content_text,String icon_name)
+    {
+        Platform.runLater(() -> makeAlert(type, error_title, header_message, content_text,icon_name).showAndWait());
     }
 
     /*----------------------------------
@@ -336,26 +373,42 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Fire an Event to emulate an internal "window closure" event.
      * @param
      */
-    private void endGame(Stage stage) {try{
+    private void endGame(Stage stage,int wait) {try{
 
-        if (stage == gameStage) TimeUnit.MILLISECONDS.sleep(750);
+        if (stage == gameStage) TimeUnit.MILLISECONDS.sleep(wait);
 
         Platform.runLater(() ->
                 stage.fireEvent (new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST)));
 
     }catch (InterruptedException e) {e.printStackTrace();}}
 
-    private void close(Stage stage)
+
+    /**
+     * Prompt for confirmation to end the game, close all windows and kill the application
+     * @param stage
+     */
+    private void exit(Stage stage)
     {
-        Optional<ButtonType> result = make_an_alert(Alert.AlertType.CONFIRMATION,"End Game and Exit","End Game and Exit Application","Are you sure?","close-white.png").showAndWait();
+        Optional<ButtonType> result = makeAlert(Alert.AlertType.CONFIRMATION,"End Game and Exit","End Game and Exit Application","Are you sure?","exit-white.png").showAndWait();
         if (((Optional) result).get()==ButtonType.OK)
         {
             gameConfig.computeIfPresent("exit", (k, v) -> true);
-            endGame(stage);
+            endGame(stage,750);
         }
     }
 
-    private Alert make_an_alert(Alert.AlertType type, String error_title, String header_message, String content_text,String icon)
+    public boolean terminationRequested() {return gameTerminated;}
+
+    /**
+     * Create and alert window given the type, title, header, text and icon
+     * @param Alert.AlertType type
+     * @param String error_title
+     * @param String header_message
+     * @param String content_text
+     * @param String icon_name
+     * @return
+     */
+    private Alert makeAlert(Alert.AlertType type, String error_title, String header_message, String content_text,String icon_name)
     {
         //--- SETTINGS UP DIALOG PANES ---
 
@@ -370,48 +423,69 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         DialogPane alertPane = alert.getDialogPane();
         alertPane.getStylesheets().add(getClass().getResource("HangmanStylez.css").toExternalForm());
         alertPane.getStyleClass().add("exit-pane");
-        if (icon.equals("close-white.png"))
+        if (icon_name.equals("exit-white.png"))
         alertPane.setGraphic(new ImageView(
-                findImage(icon,20,20,true,true)));
+                findImage(icon_name,20,20,true,true)));
 
         return alert;
     }
 
 
-
-    private void connect_To_Host(String ip, int port, String name) throws IOException, InterruptedException {
+    /**
+     * Innitiate the client socket and attempt to connect to a server
+     * @param ip
+     * @param port
+     * @param name
+     */
+    private void connectToHost(String ip, int port, String name) {
 
         HangmanLANServer localServer = null;
         HangmanLANClient localClient = null;
         boolean error = false;
+        String confirm = "";
 
         try
-        {localClient = new HangmanLANClient(ip, port);}
+        {
+            localClient = new HangmanLANClient(ip, port);
+            confirm = localClient.receiveFromServer();
+            if (confirm.equals("confirm"))
+            {
+                localClient.sendToServer(name);
+                gameConfig.put("isClient",true);
+                ((HangmanLANServer)gameConfig.get("localNetwork")).freeClients();
+                gameConfig.put("localNetwork",localClient);
+
+                gameConfig.computeIfPresent("exit", (k, v) -> false);
+                Platform.runLater(() ->
+                        configStage.fireEvent (new WindowEvent(configStage, WindowEvent.WINDOW_CLOSE_REQUEST)));
+            }
+            else
+            {
+                throw new IOException("No Connection");
+            }
+
+        }
+        catch (IOException e1)
+        {runAlert(Alert.AlertType.WARNING,"Connection Error","Problem Connecting to the Host","Double check the IP and Port","exit-white.png");}
         catch (Exception e2)
         {System.out.println("ERROR: "+e2);
-            error = true;}
+         runAlert(Alert.AlertType.WARNING,"Input Error","Something was Typed Wrong!","Check the input boxes for invalid characters","exit-white.png");}
 
-        if (error){
-            make_an_alert(Alert.AlertType.WARNING,"Connection Error","Problem Connecting to the Host","Double check the IP and Port","close-white.png");
-        }
-        else{
-            localClient.sendToServer(name);
-            gameConfig.put("isClient",true);
-            gameConfig.put("localNetwork",localClient);
-        }
-
-        gameConfig.computeIfPresent("exit", (k, v) -> true);
-        Platform.runLater(() ->
-                configStage.fireEvent (new WindowEvent(configStage, WindowEvent.WINDOW_CLOSE_REQUEST)));
 
     }
 
-
-    private void go_to_scene(Scene scene)
+    /**
+     * Attempt to switch to input scene on input stage
+     * @param scene
+     */
+    private void goToScene(Stage stage, Scene scene)
     {
-        configStage.setScene(scene);
+        stage.setScene(scene);
     }
 
+    /**
+     * Create the Scene for the Splash windows shown as the client waits for the game to start
+     */
     private void createClientWaitScene()
     {
 
@@ -448,6 +522,11 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
     }
 
+    /**
+     * Create the header bar with title and the exit and back buttons
+     * @param previous_scene
+     * @return
+     */
     private HBox createHeaderBar(Scene previous_scene)
     {
 
@@ -460,9 +539,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         Button exitButton = new Button();
         exitButton.setGraphic(new ImageView(
-                findImage("close-white.png",20,20,true,true)));
+                findImage("exit-white.png",20,20,true,true)));
         exitButton.getStyleClass().add("exit-button");
-        exitButton.setOnAction(e -> {close(configStage);});
+        exitButton.setOnAction(e -> {
+            exit(configStage);});
 
         Button backButton = new Button();
 
@@ -470,7 +550,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
             backButton.setGraphic(new ImageView(
                     findImage("back-white.png",20,20,true,true)));
             backButton.getStyleClass().add("exit-button");
-            backButton.setOnAction(e -> go_to_scene(previous_scene));}
+            backButton.setOnAction(e -> goToScene(configStage,previous_scene));}
         else
             backButton.getStyleClass().add("dead-button");
 
@@ -492,7 +572,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         return headerBox;
     }
 
-    public void createConfigScene() throws Exception {
+    /**
+     * Create the scene for setting up a players and dictionaries
+     */
+    public void createConfigScene() {
 
 
         BorderPane layout = new BorderPane();
@@ -519,29 +602,23 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         player_table.setEditable(true);
 
 
-        Button remove_player_button = new Button ("Remove\nPlayer");
-        remove_player_button.getStyleClass().add("menu-button");
-        remove_player_button.setStyle("-fx-font-size: 13");
-        remove_player_button.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
-        HBox.setHgrow(remove_player_button,Priority.ALWAYS);
-        remove_player_button.setOnAction(e ->
-        {
-            ((ArrayList<Player>)gameConfig.get("playerList")).remove(player_table.getSelectionModel().getSelectedIndex());
-            player_table.setItems(FXCollections.observableList(((ArrayList<Player>)gameConfig.get("playerList"))));
-        });
 
-
-        Label add__local_player_label = new Label("Enter Player Name");
+        Label add__local_player_label = new Label("Player Name");
         add__local_player_label.getStyleClass().add("menu-text");
-        add__local_player_label.setStyle("-fx-padding: 3 3 3 3;-fx-background-color: rgba(35,35,35,1.0);-fx-font-size:12;");
+        add__local_player_label.setStyle("-fx-font-size: 13;-fx-padding: 5 5 5 5;-fx-background-color: rgba(35,35,35,1.0);");
 
         TextField add_local_player_name = new TextField();
         add_local_player_name.getStyleClass().add("input-textfield");
-
+        add_local_player_name.setOnAction(e ->
+        {
+            ((ArrayList<Player>)gameConfig.get("playerList")).add(new Player(add_local_player_name.getText()));
+            player_table.setItems(FXCollections.observableList(((ArrayList<Player>)gameConfig.get("playerList"))));
+            add_local_player_name.clear();
+        });
 
         Button add_local_player_button = new Button("Add Local Player");
         add_local_player_button.getStyleClass().add("menu-button");
-        add_local_player_button.setStyle("-fx-font-size: 13");
+        add_local_player_button.setStyle("-fx-font-size: 13; -fx-background-insets: 1 1 1 1;");
 
         add__local_player_label.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
         add_local_player_name.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
@@ -553,18 +630,18 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
             add_local_player_name.clear();
         });
 
-
         VBox.setVgrow(add__local_player_label,Priority.ALWAYS);
         VBox.setVgrow(add_local_player_name,Priority.ALWAYS);
         VBox.setVgrow(add_local_player_button,Priority.ALWAYS);
         VBox add_local_player_box = new VBox(add__local_player_label,add_local_player_name,add_local_player_button);
+        add_local_player_box.getStyleClass().add("menu-box");
+        add_local_player_box.setStyle("-fx-background-insets: 1 1 1 1; -fx-padding: 0 0 0 0");
+        add_local_player_name.maxWidthProperty().bind(add_local_player_box.widthProperty());
 
-        Button add_network_player_button = new Button("Add\nNetwork Player");
+        Button add_network_player_button = new Button("Add\nNetwork\nPlayer");
         add_network_player_button.getStyleClass().add("menu-button");
-        add_network_player_button.setStyle("-fx-font-size: 13");
+        add_network_player_button.setStyle("-fx-font-size: 13; -fx-background-insets: 0 1 1 0; -fx-border-width: 0 0 0 1");
         add_network_player_button.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
-        //ImageView network_button_image = new ImageView();
-        //add_network_player_button.setGraphic(network_button_image);
         add_network_player_button.setOnAction(e->
         {
             if (!gameConfig.containsKey("localNetwork"))
@@ -576,7 +653,6 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
                 }
             }
 
-
             String host_creds  = null;
             try {
                 host_creds = "Host IP: " + ((HangmanLANServer)gameConfig.get("localNetwork")).getServerIP()+" | Host Port: " + ((HangmanLANServer)gameConfig.get("localNetwork")).getServerPort();
@@ -587,7 +663,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
             add_network_player_button.setText("");
             add_network_player_button.setGraphic(new ImageView(findImage("client-connecting.gif",60,60,true,true)));
-            add_network_player_button.setStyle("-fx-padding: 0 28 0 28;");
+            add_network_player_button.setStyle("-fx-padding: 0 0 0 0; -fx-background-insets: 0 1 1 0; -fx-border-width: 0 0 0 1");
+
             host_label.setText(host_creds);
             layout.setBottom(host_label);
 
@@ -599,36 +676,62 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
                 protected Void call() throws Exception
                 {
                     finalLocalServer1.findClient();
+                    finalLocalServer1.sendToClient(finalLocalServer1.getClientNumber() - 1,"confirm");
                     name[0] = finalLocalServer1.receiveFromClient(finalLocalServer1.getClientNumber() - 1);
-
                     return null;
                 }
 
             };
 
-            connect_task.setOnSucceeded(r ->
+            connect_task.setOnSucceeded(s ->
             {
-                splashStage.hide();
                 ((ArrayList<Player>)gameConfig.get("playerList")).add(new Player(name[0], ((HangmanLANServer)gameConfig.get("localNetwork")).getClientNumber() - 1));
                 player_table.setItems(FXCollections.observableList(((ArrayList<Player>)gameConfig.get("playerList"))));
-                gameConfig.put("isHost", true);
                 add_network_player_button.setText("Add\nNetwork Player");
                 add_network_player_button.setGraphic(null);
-                add_network_player_button.setStyle("-fx-font-size: 13");
+                add_network_player_button.setStyle("-fx-font-size: 13; -fx-background-insets: 0 1 1 0; -fx-border-width: 0 0 0 1");
                 layout.setBottom(null);
+                Thread.currentThread().interrupt();
             });
 
-            //splashStage.initModality(Modality.APPLICATION_MODAL);
-            //splashStage.show();
+            connect_task.setOnFailed(f ->
+            {
+                add_network_player_button.setText("Add\nNetwork Player");
+                add_network_player_button.setGraphic(null);
+                add_network_player_button.setStyle("-fx-font-size: 13; -fx-background-insets: 0 1 1 0; -fx-border-width: 0 0 0 1");
+                layout.setBottom(null);
+                Thread.currentThread().interrupt();
+            });
 
             new Thread(connect_task).start();
         });
-
         HBox.setHgrow(add_network_player_button,Priority.ALWAYS);
 
+        Button remove_player_button = new Button ("Remove\nPlayer");
+        remove_player_button.getStyleClass().add("menu-button");
+        remove_player_button.setStyle("-fx-font-size: 13; -fx-background-insets: 0 1 1 0;");
+        remove_player_button.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
+        HBox.setHgrow(remove_player_button,Priority.ALWAYS);
+        remove_player_button.setOnAction(e ->
+        {
+            try
+            {
+                int network_player =  ((ArrayList<Player>)gameConfig.get("playerList")).get(player_table.getSelectionModel().getSelectedIndex()).getRemoteIndex();
+                ((ArrayList<Player>)gameConfig.get("playerList")).remove(player_table.getSelectionModel().getSelectedIndex());
+                if (network_player >= 0)
+                {
+                    gameConfig.computeIfPresent("playerList",(k,v) -> Player.refreshNetworkIndexes((ArrayList<Player>)gameConfig.get("playerList")));
+                    ((HangmanLANServer)gameConfig.get("localNetwork")).removeClient(network_player);
+                }
+                player_table.setItems(FXCollections.observableList(((ArrayList<Player>)gameConfig.get("playerList"))));
+            }
+            catch (Exception remove_button) {runAlert(Alert.AlertType.WARNING,"Input Error","Couldn't Remove Player","Check whether you have a player selected!","exit-white.png");}
+        });
 
         HBox add_player_box = new HBox(add_local_player_box,add_network_player_button,remove_player_button);
 
+        add_network_player_button.prefWidthProperty().bind(add_player_box.widthProperty().subtract(add_local_player_box.widthProperty()).divide(3.2));
+        remove_player_button.prefWidthProperty().bind(add_player_box.widthProperty().subtract(add_local_player_box.widthProperty()).divide(3.2));
 
         VBox.setVgrow(player_table,Priority.ALWAYS);
         VBox player_list_box = new VBox(player_table,add_player_box);
@@ -638,8 +741,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         dictionaryListLabel.setStyle("-fx-background-color: rgba(85,85,85,1.0); -fx-border-color: rgba(100,100,100,1.0); -fx-border-width: 0 0 0 0;");
         dictionaryListLabel.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
         ArrayList<String> dictionaryList = new ArrayList<>();
-        for (File file : WordDictionary.getDictionaries())
-         dictionaryList.add(file.getName().split("\\.")[0]);
+        try {for (File file : WordDictionary.getDictionaries()) dictionaryList.add(file.getName().split("\\.")[0]);}
+        catch (Exception e) {runAlert(Alert.AlertType.WARNING,"Data Error","Couldn't inport dictionary files successfully","Check the files provided in the data folder","exit-white.png");}
 
         ListView<String> dictionaryListView = new ListView(FXCollections.<String>observableArrayList(dictionaryList));
         dictionaryListView.setFixedCellSize(50);
@@ -679,6 +782,9 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         sceneTable.get("config_scene").setOnMouseDragged(e-> moveWindow(e,configStage));
     }
 
+    /**
+     * Create the scene for joining a hosted game
+     */
     public void createJoinScene()
     {
 
@@ -700,6 +806,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         host_port_label.getStyleClass().add("menu-text");
         TextField host_port_input = new TextField();
         host_port_input.getStyleClass().add("input-textfield");
+        host_port_input.setOnAction(e -> {
+        try {connectToHost(host_ip_input.getText(),Integer.parseInt(host_port_input.getText()),name_input.getText()); }
+        catch (Exception e1) {runAlert(Alert.AlertType.WARNING,"Input Error","Something was Typed Wrong!","Check the input boxes for invalid characters!\n\nDetails: "+e1,"exit-white.png");}
+        });
         VBox host_port_box = new VBox(host_port_label,host_port_input);
         host_port_box.getStyleClass().add("menu-box");
 
@@ -708,8 +818,8 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         join_game_button.setStyle("-fx-background-insets: 1 1 1 1;");
 
         join_game_button.setOnAction(e -> {
-            try {connect_To_Host(host_ip_input.getText(),Integer.parseInt(host_port_input.getText()),name_input.getText()); }
-            catch (Exception e1) {make_an_alert(Alert.AlertType.WARNING,"Input Error","Something was Typed Wrong!","Check the input boxes for invalid characters","close-white.png").showAndWait();}
+            try {connectToHost(host_ip_input.getText(),Integer.parseInt(host_port_input.getText()),name_input.getText()); }
+            catch (Exception e1) {runAlert(Alert.AlertType.WARNING,"Input Error","Something was Typed Wrong!","Check the input boxes for invalid characters!\n\nDetails: "+e1,"exit-white.png");}
         });
 
         VBox credentials_box = new VBox(player_box,host_ip_box,host_port_box);
@@ -740,25 +850,27 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     }
 
 
-
-    private void createMainScene()
+    /**
+     * Create the main menu scene
+     */
+    private void createMainMenuScene()
     {
 
         Button play_button = new Button("Play Game");
         // play_button.getStyleClass().add("input-textfield");
         play_button.setOnAction(e -> {
-            try {handleCloseRequest(e,configStage);}
-            catch (Exception e1) {e1.printStackTrace();}
+            try {handleCloseRequest(e,configStage,true);}
+            catch (Exception e1) {runAlert(Alert.AlertType.WARNING,"Configuration Error","Something went wrong with closing the config window","Details: "+e,"exit-white.png");}
         });
         play_button.getStyleClass().add("menu-button");
 
 
         Button join_button = new Button("Join Game");
-        join_button.setOnAction(e -> { go_to_scene(sceneTable.get("join_scene"));});
+        join_button.setOnAction(e -> { goToScene(configStage,sceneTable.get("join_scene"));});
         join_button.getStyleClass().add("menu-button");
 
         Button conf_button = new Button("Configuration");
-        conf_button.setOnAction(e -> { go_to_scene(sceneTable.get("config_scene"));});
+        conf_button.setOnAction(e -> { goToScene(configStage,sceneTable.get("config_scene"));});
         conf_button.getStyleClass().add("menu-button");
 
         VBox.setVgrow(play_button, Priority.ALWAYS);
@@ -788,6 +900,9 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         sceneTable.get("main_scene").setOnMouseDragged(e-> moveWindow(e,configStage));
     }
 
+    /**
+     * Create the main game window scene
+     */
     private void createGameScene()
     {
         //--- SETTING UP INPUT PANEL ---
@@ -796,7 +911,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         input.getStyleClass().add("input-textfield");
         input.setOnKeyPressed(e -> {
             try {handleInput(e);}
-            catch (UnsupportedEncodingException e1) {e1.printStackTrace();}
+            catch (UnsupportedEncodingException e1) {runAlert(Alert.AlertType.WARNING,"Input Error","Something was Typed Wrong!","Details: "+e1,"exit-white.png");}
         });
 
         BorderPane layoutBottom = new BorderPane();
@@ -834,15 +949,15 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         Button exitButton = new Button();
         exitButton.setGraphic(new ImageView(
-                findImage("close-white.png",20,20,true,true)));
+                findImage("exit-white.png",20,20,true,true)));
         exitButton.getStyleClass().add("exit-button");
-        exitButton.setOnAction(e -> close(gameStage));
+        exitButton.setOnAction(e -> exit(gameStage));
 
         Button backButton = new Button();
         backButton.setGraphic(new ImageView(
                 findImage("back-white.png",20,20,true,true)));
         backButton.getStyleClass().add("exit-button");
-        backButton.setOnAction(e -> endGame(gameStage));
+        backButton.setOnAction(e -> endGame(gameStage,750));
 
         HBox playersBox = new HBox();
         for (VBox playerVBox : playerBoxList)
@@ -876,7 +991,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         sceneTable.get("game_scene").setOnMouseDragged(e-> moveWindow(e,gameStage));
     }
 
-    private void createSplashScreen()
+    /**
+     * Create the stage window to display when the client waits for the host to start the game
+     */
+    private void createSplashStage()
     {
 
         //--- CREATING CONNECTING SCENE --
@@ -887,7 +1005,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         splashStage = new Stage();
         splashStage.setScene(sceneTable.get("client_connecting_scene"));
-        splashStage.setOnCloseRequest(e -> handleCloseRequest(e, splashStage));
+        splashStage.setOnCloseRequest(e -> handleCloseRequest(e, splashStage,true));
         splashStage.initStyle(StageStyle.TRANSPARENT);
         splashStage.setTitle("Hangman: Connecting...");
         splashStage.getIcons().add(
@@ -897,11 +1015,11 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
     /**
      * Setup the Stage/Layout for the main game window.
      */
-    private void createConfigStage() throws Exception {
+    private void createConfigStage() {
 
         //--- CREATING SUBMENU SCENES ---
 
-        createMainScene();
+        createMainMenuScene();
         createJoinScene();
         createConfigScene();
 
@@ -909,7 +1027,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
 
         configStage = new Stage();
         configStage.setScene(sceneTable.get("main_scene"));
-        configStage.setOnCloseRequest(e -> handleCloseRequest(e, configStage));
+        configStage.setOnCloseRequest(e -> handleCloseRequest(e, configStage,true));
         configStage.initStyle(StageStyle.TRANSPARENT);
         configStage.setTitle("Handman: Menu");
         configStage.getIcons().add(
@@ -926,7 +1044,7 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
         gameStage = new Stage();
         gameStage.setScene(sceneTable.get("game_scene"));
         gameStage.widthProperty().addListener((e) -> resizeText(e));
-        gameStage.setOnCloseRequest(e -> handleCloseRequest(e, gameStage));
+        gameStage.setOnCloseRequest(e -> handleCloseRequest(e, gameStage,true));
         gameStage.initStyle(StageStyle.TRANSPARENT);
         gameStage.setTitle("Hangman: Game");
         gameStage.getIcons().add(
@@ -1051,10 +1169,10 @@ public class HangmanGUI extends Application implements EventHandler<ActionEvent>
      * Handles the event of a closing a window or the emulation of such event.
      * @param event
      */
-    private void handleCloseRequest (Event event, Stage stage)
+    private void handleCloseRequest (Event event, Stage stage,boolean resume_main_thread)
     {
         gameTerminated = true;
-        synchronized(HangMan.hangman) {HangMan.hangman.notify();}
+        if (resume_main_thread) synchronized(HangMan.hangman) {HangMan.hangman.notify();}
         Platform.runLater(()->stage.hide());
     }
 

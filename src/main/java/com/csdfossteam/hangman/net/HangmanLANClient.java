@@ -17,10 +17,7 @@ import java.net.Socket;
  */
 public class HangmanLANClient
 {
-    BufferedReader in;
-    PrintWriter out;
     Socket remoteServerSocket;
-
 
     /**
      * Create a client socket and attempt connection to server socket with ip and port
@@ -31,8 +28,6 @@ public class HangmanLANClient
     public HangmanLANClient(String ip, int port) throws IOException {
 
         remoteServerSocket = new Socket(ip,port);
-        in = new BufferedReader(new InputStreamReader(remoteServerSocket.getInputStream()));
-        out = new PrintWriter(remoteServerSocket.getOutputStream());
     }
 
     /**
@@ -42,6 +37,9 @@ public class HangmanLANClient
      */
     public void sendToServer(String str) throws IOException
     {
+        PrintWriter out = new PrintWriter(remoteServerSocket.getOutputStream());
+        BufferedReader in = new BufferedReader(new InputStreamReader(remoteServerSocket.getInputStream()));
+
         out.println(str);
         out.flush();
     }
@@ -61,11 +59,13 @@ public class HangmanLANClient
 
     /**
      * Wait for Server to send String
-     * @return
+     * @return String
      * @throws IOException
      */
     public String receiveFromServer() throws IOException
     {
+        PrintWriter out = new PrintWriter(remoteServerSocket.getOutputStream());
+        BufferedReader in = new BufferedReader(new InputStreamReader(remoteServerSocket.getInputStream()));
         String str = in.readLine();
 
         return str;
@@ -73,7 +73,7 @@ public class HangmanLANClient
 
     /**
      * Wait for Server to send a Object
-     * @return
+     * @return Object
      * @throws IOException
      * @throws ClassNotFoundException
      */
@@ -84,6 +84,18 @@ public class HangmanLANClient
         return is.readObject();
     }
 
+    /**
+     * Close client socket
+     */
+    public void freeClient() {
+        try {remoteServerSocket.close();}
+        catch (IOException e) {System.out.println("ERROR: "+e);}
+    }
+
+    /**
+     * Check if client socket is connected to server
+     * @return boolean
+     */
     public boolean isConnected()
     {
         return remoteServerSocket.isConnected();

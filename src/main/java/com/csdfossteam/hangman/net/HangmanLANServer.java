@@ -48,9 +48,7 @@ public class HangmanLANServer extends Thread {
      */
     public int findClient() throws IOException {
 
-
         clientThreadtList.add(new serverThread(serverSocket.accept()));
-
         return (clientThreadtList.size() - 1);
 
     }
@@ -132,6 +130,16 @@ public class HangmanLANServer extends Thread {
      */
     public int getClientNumber() {
         return clientThreadtList.size();
+    }
+
+    public void removeClient(int i)
+    {
+        try {
+            clientThreadtList.get(i).close();
+        } catch (IOException e) {
+            System.out.println("Client Socket Already Closed or Doesn't Exist");
+        }
+        clientThreadtList.remove(i);
     }
 
     /**
