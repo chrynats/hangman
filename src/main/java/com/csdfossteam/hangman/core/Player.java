@@ -17,6 +17,7 @@ import java.util.ArrayList;
 public class Player implements Serializable {
 
 
+    public static final long serialVersionUID = -2710817129268002120L;
 
     private String name;
     private String remoteTag;
@@ -73,8 +74,25 @@ public class Player implements Serializable {
         return remoteIndex;
     }
 
+    public void setRemoveIndex(int i) {remoteIndex=i;}
+
     public String getRemoteTag() {return remoteTag;}
 
+    public static ArrayList<Player> refreshNetworkIndexes(ArrayList<Player> pList)
+    {
+        int last_player_index = 0;
+        for (int i=0 ; i < pList.size(); i++)
+        {
+            if (pList.get(i).getRemoteIndex() >= 0 && Math.abs(pList.get(i).getRemoteIndex() - last_player_index) > 1)
+            {
+                for (int j=i; j < pList.size(); j++)
+                {
+                    pList.get(j).setRemoveIndex(pList.get(j).getRemoteIndex() - 1);
+                }
+            }
+        }
 
+        return pList;
+    }
 
 }

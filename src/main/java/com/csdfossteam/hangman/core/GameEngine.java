@@ -5,10 +5,13 @@
  */
 package com.csdfossteam.hangman.core;
 
+import com.csdfossteam.hangman.net.HangmanLANServer;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.BindException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,7 +29,6 @@ import java.util.Scanner;
 public class GameEngine {
 
     private WordDictionary words;
-    private Life life;
     private int winnerIndex;
     Hashtable<String,Object> gameConfig;
     Hashtable<String,Object> gameState;
@@ -246,8 +248,9 @@ public class GameEngine {
         ArrayList<Player> list = new ArrayList<>();
         list.add(new Player("player1"));
         configuration.put("playerList",list);
+        try{configuration.put("localNetwork",new HangmanLANServer(Handler.defaultPort));}
+        catch(BindException be) {configuration.put("localNetwork",new HangmanLANServer(Handler.defaultPort));}
         configuration.put("isClient",false);
-        configuration.put("isHost",false);
 
         return configuration;
     }

@@ -28,7 +28,6 @@ public class WordDictionary implements Serializable{
 
     public WordDictionary(String dict_path) throws IOException
     {
-        st = new String();
         file_path = dict_path;
         listLength = 0;
         current = new String();
